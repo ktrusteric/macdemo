@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>前端调试页面</title>
+</head>
+<body>
+    <h1>前端调试测试</h1>
+    <p>打开浏览器开发者工具（F12）查看控制台错误</p>
+    <iframe src="http://localhost:5173" width="100%" height="600" style="border: 1px solid #ccc;"></iframe>
+    
+    <h2>API测试</h2>
+    <button onclick="testAPI()">测试后端API</button>
+    <div id="api-result"></div>
+    
+    <script>
+        function testAPI() {
+            fetch('http://localhost:8000/')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('api-result').innerHTML = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    document.getElementById('api-result').innerHTML = '错误: ' + err;
+                });
+        }
+    </script>
+</body>
+</html> 

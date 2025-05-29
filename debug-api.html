@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API调试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        .success { color: #52c41a; }
+        .error { color: #f5222d; }
+        .info { color: #1890ff; }
+        .log {
+            background: #f6f6f6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 能源交易系统 - API调试工具</h1>
+    
+    <div class="test-section">
+        <h3>🌐 网络连接测试</h3>
+        <button onclick="testBasicConnection()">测试基础连接</button>
+        <button onclick="testHealthCheck()">健康检查</button>
+        <button onclick="testLoginAPI()">测试登录API</button>
+        <button onclick="clearLogs()">清空日志</button>
+        <div id="connection-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔑 登录测试</h3>
+        <div>
+            <input type="email" id="email" value="test@example.com" placeholder="邮箱" style="padding: 8px; margin: 5px; width: 200px;">
+            <input type="password" id="password" value="testpass" placeholder="密码" style="padding: 8px; margin: 5px; width: 200px;">
+            <button onclick="performLogin()">执行登录</button>
+        </div>
+        <div id="login-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>📊 当前状态</h3>
+        <div id="status-info">
+            <p><strong>前端地址:</strong> <span class="info">http://localhost:5173</span></p>
+            <p><strong>后端地址:</strong> <span class="info">http://localhost:8001</span></p>
+            <p><strong>API地址:</strong> <span class="info">http://localhost:8001/api/v1</span></p>
+            <p><strong>当前时间:</strong> <span id="current-time"></span></p>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('connection-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logElement.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function loginLog(message, type = 'info') {
+            const logElement = document.getElementById('login-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logElement.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('connection-log').innerHTML = '';
+            document.getElementById('login-log').innerHTML = '';
+        }
+
+        async function testBasicConnection() {
+            log('🔗 开始测试基础连接...');
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch('http://localhost:8001/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.text();
+                    log(`✅ 连接成功! 状态: ${response.status}, 响应: ${data}`, 'success');
+                } else {
+                    log(`❌ 连接失败! 状态: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    log(`⏰ 连接超时 (5秒)`, 'error');
+                } else {
+                    log(`❌ 连接错误: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testHealthCheck() {
+            log('🏥 开始健康检查...');
+            
+            try {
+                const response = await fetch('http://localhost:8001/api/v1/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (response.ok) {
+                    const data = await response.text();
+                    log(`✅ API健康检查成功! 响应: ${data}`, 'success');
+                } else {
+                    log(`❌ API健康检查失败! 状态: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ API健康检查错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLoginAPI() {
+            log('🔐 测试登录API端点...');
+            
+            try {
+                const response = await fetch('http://localhost:8001/api/v1/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpass'
+                    }),
+                    signal: AbortSignal.timeout(8000)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ 登录API测试成功! 获得Token: ${data.access_token ? '是' : '否'}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ 登录API测试失败! 状态: ${response.status}, 错误: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 登录API测试错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function performLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            loginLog(`🔑 尝试登录: ${email}`);
+            
+            try {
+                const response = await fetch('http://localhost:8001/api/v1/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                    signal: AbortSignal.timeout(8000)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    loginLog(`✅ 登录成功! 用户: ${data.user?.username}, Token长度: ${data.access_token?.length}`, 'success');
+                    loginLog(`📝 用户信息: ${JSON.stringify(data.user, null, 2)}`);
+                } else {
+                    const errorText = await response.text();
+                    loginLog(`❌ 登录失败! 状态: ${response.status}, 错误: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                loginLog(`❌ 登录请求错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 更新当前时间
+        function updateTime() {
+            document.getElementById('current-time').textContent = new Date().toLocaleString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // 页面加载完成后自动测试
+        window.addEventListener('load', () => {
+            log('🚀 页面加载完成，开始自动检测...');
+            setTimeout(testBasicConnection, 500);
+        });
+    </script>
+</body>
+</html> 

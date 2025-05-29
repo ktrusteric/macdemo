@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2"
+  },
+  "scripts": {
+    "dev": "vite"
+  },
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}
