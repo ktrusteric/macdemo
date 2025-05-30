@@ -30,7 +30,7 @@ class ContentListResponse(BaseModel):
 @router.get("/", response_model=ContentListResponse)
 async def get_content_list(
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=50),
+    page_size: int = Query(10, ge=1, le=100),
     content_type: Optional[str] = Query(None, description="内容类型筛选"),
     tag_filters: Optional[str] = Query(None, description="逗号分隔的标签列表"),
     sort_by: str = Query("latest", regex="^(latest|popularity|relevance)$"),
@@ -181,7 +181,7 @@ async def get_content_stats(db=Depends(get_database)):
 async def search_content(
     keyword: str = Query(..., min_length=1),
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=50),
+    page_size: int = Query(10, ge=1, le=100),
     content_type: Optional[str] = Query(None),
     tag_filters: Optional[str] = Query(None),
     db=Depends(get_database)
@@ -340,19 +340,54 @@ async def recommend_content(
         logger.info(f"  policy_measure_tags: {policy_measure_tags}")
         logger.info(f"  importance_tags: {importance_tags}")
         
-        # 获取匹配内容
-        contents = await content_service.get_content_by_tags(
-            basic_info_tags=basic_info_tags,
-            region_tags=region_tags,
-            energy_type_tags=energy_type_tags,
-            business_field_tags=business_field_tags,
-            beneficiary_tags=beneficiary_tags,
-            policy_measure_tags=policy_measure_tags,
-            importance_tags=importance_tags,
-            limit=limit
-        )
-        
-        logger.info(f"✅ 推荐内容获取成功 - 返回{len(contents)}条内容")
+        # 如果用户没有basic_info标签，提供多样化内容推荐
+        if not basic_info_tags:
+            logger.info(f"🎯 用户无basic_info标签，提供多样化内容推荐")
+            
+            # 基于地区和能源标签获取各类内容
+            diverse_contents = []
+            content_types_to_try = ['行业资讯', '政策法规', '交易公告', '调价公告']
+            items_per_type = max(1, limit // len(content_types_to_try))
+            
+            for content_type in content_types_to_try:
+                type_contents = await content_service.get_content_by_tags(
+                    basic_info_tags=[content_type],
+                    region_tags=region_tags,
+                    energy_type_tags=energy_type_tags,
+                    limit=items_per_type
+                )
+                diverse_contents.extend(type_contents)
+                logger.info(f"  📄 {content_type}: {len(type_contents)}条")
+            
+            # 如果还没达到限制数量，补充最新内容
+            if len(diverse_contents) < limit:
+                remaining = limit - len(diverse_contents)
+                additional_contents = await content_service.get_content_by_tags(
+                    region_tags=region_tags,
+                    energy_type_tags=energy_type_tags,
+                    limit=remaining + 5  # 多获取一些，去重后选择
+                )
+                # 去重添加
+                existing_ids = {getattr(c, 'id', None) for c in diverse_contents}
+                for content in additional_contents:
+                    if getattr(content, 'id', None) not in existing_ids and len(diverse_contents) < limit:
+                        diverse_contents.append(content)
+            
+            contents = diverse_contents[:limit]
+            logger.info(f"✅ 多样化推荐完成 - 返回{len(contents)}条内容")
+        else:
+            # 获取匹配内容（原有逻辑）
+            contents = await content_service.get_content_by_tags(
+                basic_info_tags=basic_info_tags,
+                region_tags=region_tags,
+                energy_type_tags=energy_type_tags,
+                business_field_tags=business_field_tags,
+                beneficiary_tags=beneficiary_tags,
+                policy_measure_tags=policy_measure_tags,
+                importance_tags=importance_tags,
+                limit=limit
+            )
+            logger.info(f"✅ 精准推荐完成 - 返回{len(contents)}条内容")
         
         # 打印推荐内容详情
         for i, content in enumerate(contents[:3]):

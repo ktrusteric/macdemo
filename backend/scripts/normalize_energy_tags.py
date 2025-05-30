@@ -8,6 +8,7 @@ import json
 import re
 import os
 from typing import List, Dict, Any
+from china_regions import find_regions_in_text
 
 # 标准能源类型（来自README.md）
 STANDARD_ENERGY_TYPES = [
@@ -134,7 +135,7 @@ def analyze_energy_types_from_content(title: str, content: str) -> List[str]:
 
 def normalize_energy_tags_in_articles():
     """
-    规范化原始文章数据中的能源品种标签
+    规范化原始文章数据中的能源品种标签，同时优化地域标签识别
     """
     
     # 读取原始数据
@@ -148,11 +149,13 @@ def normalize_energy_tags_in_articles():
     
     print(f"📊 开始处理 {len(original_data)} 篇文章")
     print(f"🎯 标准能源类型共 {len(STANDARD_ENERGY_TYPES)} 种")
+    print("🗺️ 同时进行完整地域标签识别")
     print()
     
     # 处理每篇文章
     normalized_articles = []
     energy_type_stats = {}
+    region_stats = {}
     
     for i, article in enumerate(original_data):
         print(f"处理第 {i+1} 篇: {article['标题'][:50]}...")
@@ -163,13 +166,32 @@ def normalize_energy_tags_in_articles():
             article['文章内容']
         )
         
+        # 🗺️ 使用完整地域数据分析地域标签
+        article_text = article['标题'] + " " + article['文章内容']
+        found_regions = find_regions_in_text(article_text)
+        
+        # 选择最佳地域标签（优先高级别地域）
+        selected_regions = []
+        if found_regions:
+            # 按级别和权重排序，选择前2个最重要的地域
+            found_regions.sort(key=lambda x: (x["level"], x["weight"]), reverse=True)
+            selected_regions = [r["name"] for r in found_regions[:2]]
+            
+            print(f"   发现地域: {[r['name'] for r in found_regions[:3]]}")
+            print(f"   选择地域: {selected_regions}")
+        
         # 统计能源类型
         for energy_type in detected_energy_types:
             energy_type_stats[energy_type] = energy_type_stats.get(energy_type, 0) + 1
         
+        # 统计地域分布
+        for region in selected_regions:
+            region_stats[region] = region_stats.get(region, 0) + 1
+        
         # 创建规范化的文章数据
         normalized_article = article.copy()
         normalized_article['能源品种标签'] = detected_energy_types
+        normalized_article['规范化地域标签'] = selected_regions  # 新增规范化地域标签
         
         normalized_articles.append(normalized_article)
         print()
@@ -180,14 +202,22 @@ def normalize_energy_tags_in_articles():
         json.dump(normalized_articles, f, ensure_ascii=False, indent=2)
     
     # 输出统计信息
-    print("✅ 能源品种标签规范化完成！")
+    print("✅ 能源品种和地域标签规范化完成！")
     print(f"💾 规范化数据已保存到：{output_file}")
     print()
+    
     print("📈 能源类型分布统计：")
-    sorted_stats = sorted(energy_type_stats.items(), key=lambda x: x[1], reverse=True)
-    for energy_type, count in sorted_stats:
+    sorted_energy_stats = sorted(energy_type_stats.items(), key=lambda x: x[1], reverse=True)
+    for energy_type, count in sorted_energy_stats:
         percentage = (count / len(normalized_articles)) * 100
         print(f"   {energy_type}: {count} 篇 ({percentage:.1f}%)")
+    
+    print()
+    print("🗺️ 地域分布统计（TOP 15）：")
+    sorted_region_stats = sorted(region_stats.items(), key=lambda x: x[1], reverse=True)
+    for i, (region, count) in enumerate(sorted_region_stats[:15]):
+        percentage = (count / len(normalized_articles)) * 100
+        print(f"   {region}: {count} 篇 ({percentage:.1f}%)")
     
     print()
     print("🔍 规范化效果预览（前5篇文章）：")
@@ -195,6 +225,16 @@ def normalize_energy_tags_in_articles():
         print(f"\n{i+1}. {article['标题'][:60]}...")
         print(f"   文档类型: {article['文档类型']}")
         print(f"   能源品种: {article['能源品种标签']}")
+        print(f"   地域标签: {article.get('规范化地域标签', [])}")
+    
+    # 输出覆盖率统计
+    articles_with_energy = sum(1 for article in normalized_articles if article.get('能源品种标签'))
+    articles_with_region = sum(1 for article in normalized_articles if article.get('规范化地域标签'))
+    
+    print()
+    print("📊 标签覆盖率：")
+    print(f"   能源标签覆盖率: {articles_with_energy}/{len(normalized_articles)} ({articles_with_energy/len(normalized_articles)*100:.1f}%)")
+    print(f"   地域标签覆盖率: {articles_with_region}/{len(normalized_articles)} ({articles_with_region/len(normalized_articles)*100:.1f}%)")
     
     return output_file
 

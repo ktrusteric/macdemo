@@ -61,13 +61,46 @@
               <span>猜你喜欢</span>
               <el-button type="primary" link @click="refreshRecommendations">刷新</el-button>
             </div>
+            <!-- 推荐分类按钮组 -->
+            <div class="recommendation-filter">
+              <el-button-group>
+                <el-button 
+                  :type="recommendationFilter === 'all' ? 'primary' : ''"
+                  size="small"
+                  @click="setRecommendationFilter('all')"
+                >
+                  全部推荐
+                </el-button>
+                <el-button 
+                  :type="recommendationFilter === 'market' ? 'primary' : ''"
+                  size="small"
+                  @click="setRecommendationFilter('market')"
+                >
+                  📈 行情
+                </el-button>
+                <el-button 
+                  :type="recommendationFilter === 'policy' ? 'primary' : ''"
+                  size="small"
+                  @click="setRecommendationFilter('policy')"
+                >
+                  📋 政策
+                </el-button>
+                <el-button 
+                  :type="recommendationFilter === 'announcement' ? 'primary' : ''"
+                  size="small"
+                  @click="setRecommendationFilter('announcement')"
+                >
+                  📢 公告
+                </el-button>
+              </el-button-group>
+            </div>
           </template>
           <div class="recommendations">
-            <el-timeline v-if="recommendations.length">
+            <el-timeline v-if="filteredRecommendations.length">
               <el-timeline-item
-                v-for="(item, index) in recommendations"
+                v-for="(item, index) in filteredRecommendations"
                 :key="index"
-                :timestamp="item.publish_time"
+                :timestamp="formatDate(item.publish_time)"
                 :type="getTimelineType(item.type)"
               >
                 <el-card class="recommendation-card">
@@ -99,7 +132,7 @@
                 </el-card>
               </el-timeline-item>
             </el-timeline>
-            <el-empty v-else description="暂无推荐内容" />
+            <el-empty v-else :description="getEmptyDescription()" />
           </div>
         </el-card>
       </el-col>
@@ -241,12 +274,13 @@ const tagStats = ref([
   { label: '基础信息', key: 'basic_info', count: 0 }
 ])
 
-// 内容推荐
+// 响应式数据
+const userTags = ref([])
 const recommendations = ref([])
-
-// 交易公告
-const priceAnnouncements = ref([])
+const filteredRecommendations = ref([])
+const recommendationFilter = ref('all')
 const tradeAnnouncements = ref([])
+const priceAnnouncements = ref([])
 
 // 资讯概览
 const contentStats = ref([
@@ -418,13 +452,22 @@ const loadRecommendedContent = async () => {
     })
     
     console.log('📄 推荐内容响应:', res.data)
-    recommendations.value = res.data.items || []
-    console.log('✅ 成功加载推荐内容:', recommendations.value.length, '条')
     
-  } catch (e: any) {
-    console.error('❌ 加载推荐内容失败:', e)
-    console.error('错误详情:', e.response?.data || e.message)
+    if (res.data && res.data.items) {
+      recommendations.value = res.data.items || []
+      console.log('✅ 推荐内容加载成功，数量:', recommendations.value.length)
+      
+      // 应用当前筛选条件
+      filterRecommendations()
+    } else {
+      console.error('❌ 推荐内容加载失败:', res.data?.message || '未知错误')
+      recommendations.value = []
+      filteredRecommendations.value = []
+    }
+  } catch (error) {
+    console.error('❌ 推荐内容加载异常:', error)
     recommendations.value = []
+    filteredRecommendations.value = []
   }
 }
 
@@ -432,7 +475,7 @@ const loadRecommendedContent = async () => {
 const loadAnnouncements = async () => {
   try {
     // 拉取所有内容，前端筛选basic_info_tags
-    const res = await getAnnouncements('', 1, 50)
+    const res = await getAnnouncements('', 1, 100)
     const allItems = res.data.items || []
     // 按basic_info_tags筛选
     priceAnnouncements.value = allItems
@@ -456,7 +499,7 @@ const loadContentStats = async () => {
     const contentRes = await api.get('/content/', {
       params: {
         page: 1,
-        page_size: 50,
+        page_size: 100,
         sort_by: 'latest'
       }
     })
@@ -466,24 +509,22 @@ const loadContentStats = async () => {
     
     // 按分类统计
     const marketCount = allContent.filter(item => 
-      (item.basic_info_tags || []).some(tag => tag.includes('行情')) ||
-      (item.business_field_tags || []).some(tag => tag.includes('市场'))
+      (item.basic_info_tags || []).includes('行业资讯')
     ).length
     
     const policyCount = allContent.filter(item => 
-      (item.basic_info_tags || []).some(tag => tag.includes('政策')) ||
-      item.type === 'POLICY'
+      (item.basic_info_tags || []).includes('政策法规')
     ).length
     
     const announcementCount = allContent.filter(item => 
-      (item.basic_info_tags || []).some(tag => tag.includes('公告')) ||
-      item.type === 'ANNOUNCEMENT'
+      (item.basic_info_tags || []).includes('交易公告') ||
+      (item.basic_info_tags || []).includes('调价公告')
     ).length
     
     contentStats.value = [
-      { title: '行情资讯', value: marketCount, type: 'news' },
-      { title: '政策法规', value: policyCount, type: 'policy' },
-      { title: '公告信息', value: announcementCount, type: 'announcement' }
+      { title: '行情', value: marketCount, type: 'news' },
+      { title: '政策', value: policyCount, type: 'policy' },
+      { title: '公告', value: announcementCount, type: 'announcement' }
     ]
     
     console.log('✅ 内容统计完成:', {
@@ -495,9 +536,9 @@ const loadContentStats = async () => {
   } catch (error) {
     console.error('❌ 加载内容统计失败:', error)
     contentStats.value = [
-      { title: '行情资讯', value: 0, type: 'news' },
-      { title: '政策法规', value: 0, type: 'policy' },
-      { title: '公告信息', value: 0, type: 'announcement' }
+      { title: '行情', value: 0, type: 'news' },
+      { title: '政策', value: 0, type: 'policy' },
+      { title: '公告', value: 0, type: 'announcement' }
     ]
   }
 }
@@ -538,6 +579,53 @@ const goToContentByType = (contentType: string) => {
 
 const goToMarket = () => {
   router.push('/market')
+}
+
+// 设置推荐筛选
+const setRecommendationFilter = (filter: string) => {
+  recommendationFilter.value = filter
+  filterRecommendations()
+}
+
+// 筛选推荐内容
+const filterRecommendations = () => {
+  if (recommendationFilter.value === 'all') {
+    filteredRecommendations.value = recommendations.value
+    return
+  }
+  
+  filteredRecommendations.value = recommendations.value.filter(item => {
+    const basicInfoTags = item.basic_info_tags || []
+    
+    switch (recommendationFilter.value) {
+      case 'market':
+        // 行情：精确匹配"行业资讯"标签
+        return basicInfoTags.includes('行业资讯')
+      case 'policy':
+        // 政策：精确匹配"政策法规"标签
+        return basicInfoTags.includes('政策法规')
+      case 'announcement':
+        // 公告：匹配"交易公告"或"调价公告"标签
+        return basicInfoTags.includes('交易公告') || 
+               basicInfoTags.includes('调价公告')
+      default:
+        return true
+    }
+  })
+}
+
+// 获取空状态描述
+const getEmptyDescription = () => {
+  switch (recommendationFilter.value) {
+    case 'market':
+      return '暂无行情类推荐内容'
+    case 'policy':
+      return '暂无政策类推荐内容' 
+    case 'announcement':
+      return '暂无公告类推荐内容'
+    default:
+      return '暂无推荐内容'
+  }
 }
 
 onMounted(() => {
@@ -999,5 +1087,12 @@ onMounted(() => {
   margin: 4px 0 0;
   color: #666;
   font-size: 12px;
+}
+
+/* 推荐筛选样式 */
+.recommendation-filter {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
 }
 </style> 

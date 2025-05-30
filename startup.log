@@ -1,0 +1,56 @@
+=== OpenResty 负载均衡管理平台 - 完整启动（含数据初始化）===
+==========================================
+[0;34m[INFO][0m OpenResty 负载均衡管理平台完整启动
+[0;34m[INFO][0m 包含前后端服务和数据重置初始化
+==========================================
+[0;34m[INFO][0m 清理现有相关进程...
+[0;34m[INFO][0m 查找并停止uvicorn进程...
+[0;34m[INFO][0m 未发现uvicorn进程
+[0;34m[INFO][0m 查找并停止前端进程...
+[0;34m[INFO][0m 未发现前端Node进程
+[0;34m[INFO][0m 检查并清理端口占用...
+[0;32m[SUCCESS][0m 进程清理完成
+[0;34m[INFO][0m 检查运行环境...
+[0;32m[SUCCESS][0m Python3: Python 3.13.3
+[0;32m[SUCCESS][0m Node.js: v24.1.0
+[0;32m[SUCCESS][0m npm: 11.3.0
+[0;32m[SUCCESS][0m MongoDB 服务正在运行
+[0;34m[INFO][0m 检查端口状态...
+[0;34m[INFO][0m 端口 8001 可用
+[0;34m[INFO][0m 端口 5173 可用
+[0;32m[SUCCESS][0m 端口检查完成
+[0;34m[INFO][0m 清除历史数据并重新导入...
+[0;34m[INFO][0m 安装Python依赖...
+[0;34m[INFO][0m 清除数据库...
+数据库清除完成
+[0;34m[INFO][0m 重新导入测试数据...
+📊 开始数据导入... 使用简化数据
+============================================================
+Starting data import...
+
+1. Importing articles...
+📚 导入文章数据...
+Cleared existing content data
+🔧 使用简化测试数据（每篇文章3-5个标签，便于测试）
+✅ 成功导入 45 篇文章
+
+📈 覆盖率统计：
+   有能源类型标签的文章: 0/45 (0.0%)
+Traceback (most recent call last):
+  File "/Users/eric/Documents/GitHub/macdemo/backend/scripts/import_sample_data.py", line 330, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/eric/Documents/GitHub/macdemo/backend/scripts/import_sample_data.py", line 311, in main
+    await import_articles(use_simplified=use_simplified)
+  File "/Users/eric/Documents/GitHub/macdemo/backend/scripts/import_sample_data.py", line 151, in import_articles
+    await client.close()
+TypeError: object NoneType can't be used in 'await' expression

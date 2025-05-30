@@ -71,7 +71,7 @@
     <el-row :gutter="20" class="stats-row">
       <el-col :span="6">
         <el-card class="stat-card market-stat" @click="selectCategory('market')">
-          <el-statistic title="行情动态" :value="stats.market" />
+          <el-statistic title="行情咨询" :value="stats.market" />
           <div class="stat-icon">📈</div>
         </el-card>
       </el-col>
@@ -227,35 +227,23 @@ const filteredContent = computed(() => {
   if (activeCategory.value !== 'all') {
     switch (activeCategory.value) {
       case 'market':
+        // 行情动态：精确匹配"行业资讯"标签
         filtered = filtered.filter(item => 
-          (item.basic_info_tags || []).some(tag => tag.includes('行情')) ||
-          (item.business_field_tags || []).some(tag => tag.includes('市场'))
+          (item.basic_info_tags || []).includes('行业资讯')
         )
         break
       case 'policy':
+        // 政策法规：精确匹配"政策法规"标签
         filtered = filtered.filter(item => 
-          (item.basic_info_tags || []).some(tag => tag.includes('政策')) ||
-          item.type === 'POLICY'
+          (item.basic_info_tags || []).includes('政策法规')
         )
         break
       case 'announcement':
+        // 公告信息：匹配"交易公告"或"调价公告"标签
         filtered = filtered.filter(item => 
-          (item.basic_info_tags || []).some(tag => tag.includes('公告')) ||
-          item.type === 'ANNOUNCEMENT'
+          (item.basic_info_tags || []).includes('交易公告') ||
+          (item.basic_info_tags || []).includes('调价公告')
         )
-        
-        // 公告细分类型
-        if (announcementType.value !== 'all') {
-          if (announcementType.value === 'trade') {
-            filtered = filtered.filter(item => 
-              (item.basic_info_tags || []).some(tag => tag.includes('交易公告'))
-            )
-          } else if (announcementType.value === 'price') {
-            filtered = filtered.filter(item => 
-              (item.basic_info_tags || []).some(tag => tag.includes('调价公告'))
-            )
-          }
-        }
         break
     }
   }
@@ -355,7 +343,7 @@ const loadContent = async () => {
     const response = await api.get('/content/', {
       params: {
         page: 1,
-        page_size: 50, // 修复：使用API允许的最大值
+        page_size: 100, // 修复：增加到100确保获取所有数据
         sort_by: sortBy.value
       }
     })
@@ -379,19 +367,21 @@ const updateStats = () => {
   const content = allContent.value
   
   stats.value = {
+    // 行情动态：精确匹配"行业资讯"标签
     market: content.filter(item => 
-      (item.basic_info_tags || []).some(tag => tag.includes('行情')) ||
-      (item.business_field_tags || []).some(tag => tag.includes('市场'))
+      (item.basic_info_tags || []).includes('行业资讯')
     ).length,
+    // 政策法规：精确匹配"政策法规"标签  
     policy: content.filter(item => 
-      (item.basic_info_tags || []).some(tag => tag.includes('政策')) ||
-      item.type === 'POLICY'
+      (item.basic_info_tags || []).includes('政策法规')
     ).length,
+    // 交易公告：精确匹配"交易公告"标签
     tradeAnnouncement: content.filter(item => 
-      (item.basic_info_tags || []).some(tag => tag.includes('交易公告'))
+      (item.basic_info_tags || []).includes('交易公告')
     ).length,
+    // 调价公告：精确匹配"调价公告"标签
     priceAnnouncement: content.filter(item => 
-      (item.basic_info_tags || []).some(tag => tag.includes('调价公告'))
+      (item.basic_info_tags || []).includes('调价公告')
     ).length
   }
 }

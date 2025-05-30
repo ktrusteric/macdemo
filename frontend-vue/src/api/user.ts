@@ -4,8 +4,20 @@ export const login = async (email: string, password: string) => {
   return api.post('/users/login', { email, password })
 }
 
-export const register = async (email: string, password: string, username?: string) => {
-  return api.post('/users/register', { email, password, username })
+export const register = async (
+  email: string, 
+  username: string, 
+  password: string, 
+  register_city: string, 
+  energy_types: string[]
+) => {
+  return api.post('/users/register', { 
+    email, 
+    username, 
+    password, 
+    register_city, 
+    energy_types 
+  })
 }
 
 export const getUserTags = async (userId: string) => {

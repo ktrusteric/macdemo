@@ -74,7 +74,6 @@
             class="preview-tag"
           >
             {{ tag.name }}
-            <el-icon class="tag-weight-icon" v-if="tag.weight > 1.0"><Star /></el-icon>
           </el-tag>
         </div>
       </div>
@@ -164,35 +163,150 @@
             <div class="current-tags-section">
               <h4 class="section-title">当前标签</h4>
               <div class="tags-container" v-if="getTagsByCategory(category.key).length">
-                <el-tag
+                <div
                   v-for="tag in getTagsByCategory(category.key)"
                   :key="`${tag.category}-${tag.name}`"
-                  :type="getTagTypeByCategory(category.key)"
-                  :effect="tag.source === 'preset' ? 'dark' : 'plain'"
-                  closable
-                  @close="removeTag(tag)"
-                  class="tag-item"
+                  class="tag-item-wrapper"
                 >
-                  <div class="tag-content">
-                    <span class="tag-name">{{ tag.name }}</span>
-                    <span class="tag-weight">{{ tag.weight }}x</span>
-                    <span class="tag-source">{{ getSourceLabel(tag.source) }}</span>
+                  <!-- 标签显示 -->
+                  <el-tag
+                    v-if="!tag.isEditing"
+                    :type="getTagTypeByCategory(category.key)"
+                    :effect="tag.source === 'preset' ? 'dark' : 'plain'"
+                    closable
+                    @close="removeTag(tag)"
+                    @click="startEditWeight(tag)"
+                    class="tag-item editable-tag"
+                  >
+                    <div class="tag-content">
+                      <span class="tag-name">{{ tag.name }}</span>
+                      <span class="tag-weight">{{ tag.weight }}x</span>
+                    </div>
+                    <el-icon class="edit-hint-icon"><Edit /></el-icon>
+                  </el-tag>
+                  
+                  <!-- 权重编辑器 -->
+                  <div v-else class="tag-weight-editor">
+                    <div class="editor-content">
+                      <span class="editing-tag-name">{{ tag.name }}</span>
+                      <el-input-number
+                        v-model="tag.editingWeight"
+                        :min="0.1"
+                        :max="5.0"
+                        :step="0.1"
+                        :precision="1"
+                        size="small"
+                        class="weight-editor-input"
+                        @keyup.enter="confirmEditWeight(tag)"
+                        @keyup.esc="cancelEditWeight(tag)"
+                      />
+                      <div class="weight-editor-actions">
+                        <el-button 
+                          type="success" 
+                          size="small" 
+                          @click="confirmEditWeight(tag)"
+                          icon="Check"
+                          circle
+                        />
+                        <el-button 
+                          type="info" 
+                          size="small" 
+                          @click="cancelEditWeight(tag)"
+                          icon="Close"
+                          circle
+                        />
+                      </div>
+                    </div>
                   </div>
-                </el-tag>
+                </div>
               </div>
               <el-empty 
                 v-else 
-                description="暂无标签，请从预设标签中选择或手动添加"
+                description="暂无标签，请从预设标签中选择或使用选择器添加"
                 :image-size="100"
               />
             </div>
 
+            <!-- 地域标签的特殊省份-城市选择器 -->
+            <div class="region-selector-section" v-if="category.key === 'region'">
+              <h4 class="section-title">
+                省份城市选择器
+                <div class="selector-hint">
+                  <span class="selector-hint-text">选择省份和城市，自动生成地区标签</span>
+                </div>
+              </h4>
+              
+              <div class="region-selector-container">
+                <div class="region-selector-row">
+                  <el-select 
+                    v-model="regionSelector.selectedProvince" 
+                    placeholder="选择省份" 
+                    filterable 
+                    @change="handleRegionProvinceChange"
+                    class="province-selector"
+                  >
+                    <el-option 
+                      v-for="province in regionProvinces" 
+                      :key="province.code" 
+                      :label="province.name" 
+                      :value="province.code"
+                    >
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>{{ province.name }}</span>
+                        <el-tag size="small" type="info">{{ province.city_count }}个城市</el-tag>
+                      </div>
+                    </el-option>
+                  </el-select>
+                  
+                  <el-select 
+                    v-model="regionSelector.selectedCity" 
+                    placeholder="选择城市" 
+                    filterable 
+                    @change="handleRegionCityChange"
+                    class="city-selector"
+                    :disabled="!regionSelector.availableCities.length"
+                  >
+                    <el-option 
+                      v-for="city in regionSelector.availableCities" 
+                      :key="city" 
+                      :label="city" 
+                      :value="city" 
+                    />
+                  </el-select>
+                  
+                  <el-button 
+                    type="success" 
+                    @click="addRegionTags"
+                    :disabled="!regionSelector.selectedCity"
+                    icon="Plus"
+                  >
+                    添加地区标签
+                  </el-button>
+                </div>
+                
+                <!-- 预览将要添加的标签 -->
+                <div class="region-preview" v-if="regionSelector.previewTags.length">
+                  <el-text type="info" size="small">将添加以下标签：</el-text>
+                  <div class="preview-tags">
+                    <el-tag 
+                      v-for="tag in regionSelector.previewTags" 
+                      :key="tag.name"
+                      :type="tag.level === 'city' ? 'success' : tag.level === 'province' ? 'info' : 'warning'"
+                      size="small"
+                    >
+                      {{ tag.name }} ({{ tag.level === 'city' ? '城市' : tag.level === 'province' ? '省份' : '区域' }})
+                    </el-tag>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- 预设标签 -->
-            <div class="preset-tags-section">
+            <div class="preset-tags-section" v-if="category.key !== 'region'">
               <h4 class="section-title">
                 预设标签
                 <div class="preset-actions">
-                  <span class="preset-hint">点击选择 →</span>
+                  <span class="preset-hint">点击添加 →</span>
                   <el-button 
                     type="primary" 
                     link 
@@ -209,45 +323,12 @@
                   :key="presetTag"
                   :type="getTagTypeByCategory(category.key)"
                   effect="plain"
-                  @click="selectPresetTag(category.key, presetTag)"
+                  @click="addPresetTagDirectly(category.key, presetTag)"
                   class="preset-tag-item"
                 >
                   <el-icon><Plus /></el-icon>
                   {{ presetTag }}
                 </el-tag>
-              </div>
-            </div>
-
-            <!-- 自定义权重 -->
-            <div class="custom-tag-section">
-              <h4 class="section-title">自定义权重</h4>
-              <div class="custom-tag-input">
-                <el-input
-                  v-model="newTagInputs[category.key]"
-                  :placeholder="`标签名称...`"
-                  class="tag-input"
-                  @keyup.enter="addCustomTag(category.key)"
-                >
-                  <template #prepend>
-                    <el-icon><PriceTag /></el-icon>
-                  </template>
-                </el-input>
-                <el-input-number
-                  v-model="newTagWeight"
-                  :min="0.1"
-                  :max="5.0"
-                  :step="0.1"
-                  :precision="1"
-                  placeholder="权重"
-                  class="weight-input"
-                />
-                <el-button 
-                  type="success" 
-                  @click="addCustomTag(category.key)"
-                  :disabled="!newTagInputs[category.key] || !newTagInputs[category.key].trim()"
-                >
-                  添加
-                </el-button>
               </div>
             </div>
           </div>
@@ -263,11 +344,11 @@ import {
   PriceTag, 
   InfoFilled, 
   Plus, 
-  Star,
   Refresh,
   Check,
   RefreshLeft,
-  Delete
+  Delete,
+  Edit
 } from '@element-plus/icons-vue'
 import api from '@/api/request'
 import { useUserStore } from '@/store/user'
@@ -279,6 +360,8 @@ interface UserTag {
   weight: number;
   source: string;
   created_at: string;
+  isEditing?: boolean;
+  editingWeight?: number;
 }
 
 const userStore = useUserStore()
@@ -288,13 +371,11 @@ const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
 const activeTab = ref('basic_info')
-const newTagWeight = ref(1.0)
 const hasChanges = ref(false)
 
 // 标签数据
 const tags = ref<UserTag[]>([])
 const originalTags = ref<UserTag[]>([])
-const newTagInputs = reactive<Record<string, string>>({})
 
 // 7大类标签配置 - 与后端完全对应
 const tagCategories = ref([
@@ -308,9 +389,9 @@ const tagCategories = ref([
   {
     key: 'region',
     name: '🗺️ 地域标签',
-    description: '地理区域相关标签（地区、省份、城市）',
+    description: '地理区域相关标签（请使用下方的省份城市选择器添加）',
     color: 'success',
-    presetTags: ['华东地区', '华南地区', '华北地区', '华中地区', '西南地区', '西北地区', '东北地区', '全国', '国际', '中国', '上海市', '北京市', '广东省', '浙江省', '四川省', '湖南省', '湖北省', '江苏省', '天津市', '重庆市', '上海', '北京', '深圳', '广州', '杭州', '成都', '长沙', '武汉', '南京', '苏州', '天津', '重庆', '西安', '郑州', '沈阳', '大连', '青岛', '济南']
+    presetTags: [] // 清空预设标签，使用选择器
   },
   {
     key: 'energy_type',
@@ -394,15 +475,6 @@ const getBadgeType = (category: string) => {
   return 'success'
 }
 
-const getSourceLabel = (source: string) => {
-  switch (source) {
-    case 'preset': return '预设'
-    case 'manual': return '自定义'
-    case 'region_auto': return '自动'
-    default: return source
-  }
-}
-
 const getTagSizeByWeight = (weight: number) => {
   if (weight >= 2.0) return 'large'
   if (weight >= 1.5) return 'default'
@@ -410,21 +482,7 @@ const getTagSizeByWeight = (weight: number) => {
 }
 
 // 标签操作方法
-const selectPresetTag = (category: string, tagName: string) => {
-  // 检查是否已存在
-  if (tags.value.find(tag => tag.category === category && tag.name === tagName)) {
-    ElMessage.warning('该标签已存在')
-    return
-  }
-  
-  // 将标签名称填入输入框
-  newTagInputs[category] = tagName
-  
-  // 给出提示
-  ElMessage.success(`已选择"${tagName}"，请调整权重后点击添加`)
-}
-
-const addPresetTag = (category: string, tagName: string) => {
+const addPresetTagDirectly = (category: string, tagName: string) => {
   if (tags.value.find(tag => tag.category === category && tag.name === tagName)) {
     ElMessage.warning('该标签已存在')
     return
@@ -439,37 +497,7 @@ const addPresetTag = (category: string, tagName: string) => {
   })
   
   hasChanges.value = true
-  ElMessage.success(`已添加${tagName}`)
-}
-
-const addCustomTag = (category: string) => {
-  const tagName = newTagInputs[category]?.trim()
-  if (!tagName) {
-    ElMessage.warning('请输入标签名称')
-    return
-  }
-  
-  if (tags.value.find(tag => tag.category === category && tag.name === tagName)) {
-    ElMessage.warning('该标签已存在')
-    return
-  }
-  
-  // 检查是否为预设标签
-  const categoryConfig = tagCategories.value.find(cat => cat.key === category)
-  const isPresetTag = categoryConfig?.presetTags.includes(tagName) || false
-  
-  tags.value.push({
-    category,
-    name: tagName,
-    weight: newTagWeight.value,
-    source: isPresetTag ? 'preset' : 'manual',
-    created_at: new Date().toISOString()
-  })
-  
-  newTagInputs[category] = ''
-  newTagWeight.value = 1.0
-  hasChanges.value = true
-  ElMessage.success(`已添加${isPresetTag ? '预设' : '自定义'}标签：${tagName}`)
+  ElMessage.success(`已添加预设标签：${tagName}`)
 }
 
 const addAllPresetTags = async (category: any) => {
@@ -677,12 +705,171 @@ watch(tags, () => {
 // 页面挂载
 onMounted(() => {
   fetchTags()
-  
-  // 初始化输入框
-  tagCategories.value.forEach(category => {
-    newTagInputs[category.key] = ''
-  })
+  loadProvincesWithCities()
 })
+
+// 加载省份城市数据
+const regionProvinces = ref([])
+const regionSelector = reactive({
+  selectedProvince: '',
+  selectedCity: '',
+  availableCities: [],
+  previewTags: []
+})
+
+// 加载省份城市数据
+const loadProvincesWithCities = async () => {
+  try {
+    const response = await api.get('/users/provinces-with-cities')
+    const data = response.data
+    
+    regionProvinces.value = data.provinces
+    
+    console.log('✅ 省份城市数据加载成功', {
+      provinces: data.total_provinces,
+      cities: data.total_cities
+    })
+  } catch (error) {
+    console.error('❌ 加载省份城市数据失败:', error)
+    ElMessage.error('加载省份城市数据失败')
+  }
+}
+
+// 省份选择处理
+const handleRegionProvinceChange = (provinceCode: string) => {
+  // 清空城市选择
+  regionSelector.selectedCity = ''
+  regionSelector.previewTags = []
+  
+  // 更新可选城市列表
+  const selectedProvince = regionProvinces.value.find(p => p.code === provinceCode)
+  if (selectedProvince) {
+    regionSelector.availableCities = selectedProvince.cities
+    console.log(`🏛️ 省份选择: ${selectedProvince.name}, ${selectedProvince.cities.length}个城市`)
+  } else {
+    regionSelector.availableCities = []
+  }
+}
+
+// 城市选择处理
+const handleRegionCityChange = async (cityValue: string) => {
+  if (!cityValue) {
+    regionSelector.previewTags = []
+    return
+  }
+  
+  try {
+    // 调用后端API获取城市的完整区域信息
+    const response = await api.get(`/users/cities-details`)
+    const citiesDetails = response.data.cities
+    
+    const cityDetail = citiesDetails.find(c => c.city === cityValue)
+    if (cityDetail) {
+      // 生成预览标签
+      regionSelector.previewTags = []
+      
+      // 城市标签
+      regionSelector.previewTags.push({
+        name: cityDetail.city,
+        level: 'city',
+        weight: 2.5
+      })
+      
+      // 省份标签
+      if (cityDetail.province) {
+        regionSelector.previewTags.push({
+          name: cityDetail.province,
+          level: 'province',
+          weight: 2.0
+        })
+      }
+      
+      // 区域标签
+      if (cityDetail.region) {
+        regionSelector.previewTags.push({
+          name: cityDetail.region,
+          level: 'region',
+          weight: 1.5
+        })
+      }
+      
+      console.log('🏙️ 城市选择完成:', cityDetail)
+      console.log('📝 预览标签:', regionSelector.previewTags)
+    }
+  } catch (error) {
+    console.error('❌ 获取城市详情失败:', error)
+    ElMessage.error('获取城市详情失败')
+  }
+}
+
+// 添加地区标签
+const addRegionTags = async () => {
+  if (!regionSelector.selectedCity || !regionSelector.previewTags.length) {
+    ElMessage.warning('请先选择城市')
+    return
+  }
+  
+  try {
+    let addedCount = 0
+    
+    // 添加预览中的标签
+    for (const previewTag of regionSelector.previewTags) {
+      // 检查标签是否已存在
+      const existingTag = tags.value.find(tag => 
+        tag.category === 'region' && tag.name === previewTag.name
+      )
+      
+      if (!existingTag) {
+        tags.value.push({
+          category: 'region',
+          name: previewTag.name,
+          weight: previewTag.weight,
+          source: previewTag.level === 'city' ? 'preset' : 'region_auto',
+          created_at: new Date().toISOString()
+        })
+        addedCount++
+      }
+    }
+    
+    if (addedCount > 0) {
+      hasChanges.value = true
+      ElMessage.success(`成功添加${addedCount}个地区标签`)
+      
+      // 清空选择器
+      regionSelector.selectedProvince = ''
+      regionSelector.selectedCity = ''
+      regionSelector.availableCities = []
+      regionSelector.previewTags = []
+    } else {
+      ElMessage.info('所选地区标签已存在，无需添加')
+    }
+    
+  } catch (error) {
+    console.error('❌ 添加地区标签失败:', error)
+    ElMessage.error('添加地区标签失败')
+  }
+}
+
+const startEditWeight = (tag: UserTag) => {
+  tag.isEditing = true
+  tag.editingWeight = tag.weight
+}
+
+const confirmEditWeight = (tag: UserTag) => {
+  if (tag.editingWeight !== undefined && tag.editingWeight !== null) {
+    tag.weight = tag.editingWeight
+    tag.isEditing = false
+    hasChanges.value = true
+    ElMessage.success(`已更新标签权重：${tag.name}`)
+  }
+}
+
+const cancelEditWeight = (tag: UserTag) => {
+  tag.isEditing = false
+  tag.editingWeight = undefined
+  hasChanges.value = true
+  ElMessage.info(`已取消编辑标签权重：${tag.name}`)
+}
 </script>
 
 <style scoped>
@@ -881,6 +1068,12 @@ onMounted(() => {
   gap: 12px;
 }
 
+.tag-item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .tag-item {
   margin: 0;
   padding: 8px 12px;
@@ -944,7 +1137,7 @@ onMounted(() => {
 }
 
 .preset-tag-item:hover::after {
-  content: "点击选择";
+  content: "点击添加";
   position: absolute;
   top: -24px;
   left: 50%;
@@ -1037,5 +1230,98 @@ onMounted(() => {
 
 :deep(.el-badge__content) {
   border: none;
+}
+
+.region-selector-section {
+  margin-bottom: 32px;
+  padding: 20px;
+  background: #f0f9ff;
+  border: 2px dashed #3b82f6;
+  border-radius: 12px;
+}
+
+.selector-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selector-hint-text {
+  font-size: 12px;
+  color: #3b82f6;
+  font-weight: normal;
+}
+
+.region-selector-container {
+  margin-top: 16px;
+}
+
+.region-selector-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.province-selector {
+  flex: 1;
+  min-width: 160px;
+}
+
+.city-selector {
+  flex: 1;
+  min-width: 160px;
+}
+
+.region-preview {
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.preview-tags .el-tag {
+  margin: 0;
+}
+
+.editable-tag {
+  cursor: pointer;
+}
+
+.edit-hint-icon {
+  color: #1890ff;
+  margin-left: 4px;
+}
+
+.tag-weight-editor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editing-tag-name {
+  font-weight: bold;
+}
+
+.weight-editor-input {
+  width: 120px;
+}
+
+.weight-editor-actions {
+  display: flex;
+  gap: 8px;
 }
 </style> 

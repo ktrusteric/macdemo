@@ -29,9 +29,15 @@ class UserService:
             if existing_username:
                 raise ValueError("Username already taken")
             
-            # 验证注册城市是否支持
-            if not RegionMapper.get_region_by_city(user_data.register_city):
+            # 验证注册城市是否支持（改用省份映射验证）
+            province_code = RegionMapper.get_province_by_city(user_data.register_city)
+            if not province_code:
                 raise ValueError(f"不支持的注册城市: {user_data.register_city}")
+            
+            # 通过省份获取区域信息（确保完整的地域信息）
+            region_code = RegionMapper.get_region_by_province(province_code)
+            if not region_code:
+                raise ValueError(f"无法获取城市 {user_data.register_city} 的区域信息")
             
             # 创建用户基础信息
             user_id = str(uuid.uuid4())
@@ -79,8 +85,9 @@ class UserService:
     ) -> UserTags:
         """基于注册城市初始化用户标签（三层标签：城市、省份、区域）"""
         try:
-            # 验证城市有效性
-            if register_city not in RegionMapper.get_all_cities():
+            # 验证城市有效性（改用省份映射验证）
+            province_code = RegionMapper.get_province_by_city(register_city)
+            if not province_code:
                 raise ValueError(f"Unsupported city: {register_city}")
             
             # 获取完整位置信息
@@ -282,13 +289,14 @@ class UserService:
             # 如果用户不存在或没有注册城市，创建基础标签
             print(f"为用户 {user_id} 创建基础标签（用户{'不存在' if not user else '无注册城市'}）")
             basic_tags = [
-                UserTag(
-                    category=TagCategory.REGION,
-                    name="全国",
-                    weight=1.0,
-                    source=TagSource.PRESET,
-                    created_at=datetime.utcnow()
-                ),
+                # 移除"全国"标签，避免用户获取过多无关内容
+                # UserTag(
+                #     category=TagCategory.REGION,
+                #     name="全国",
+                #     weight=1.0,
+                #     source=TagSource.PRESET,
+                #     created_at=datetime.utcnow()
+                # ),
                 UserTag(
                     category=TagCategory.ENERGY_TYPE,
                     name="天然气",

@@ -325,7 +325,7 @@ async def update_user_tags(user_id: str, tag_request: TagUpdateRequest, db=Depen
 async def get_user_recommendations(
     user_id: str,
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=50),
+    page_size: int = Query(10, ge=1, le=100),
     tag_filters: Optional[str] = Query(None, description="逗号分隔的标签列表"),
     content_type: Optional[str] = Query(None, description="内容类型筛选"),
     db=Depends(get_database)
@@ -403,7 +403,8 @@ async def get_user_recommendations(
         total = max(len(recommendations), 50)  # 简化总数计算
         has_next = len(recommendations) == page_size
         
-        response = ContentListResponse(
+        print(f"📊 返回推荐结果: {len(recommendations)} 条")
+        return ContentListResponse(
             items=recommendations,
             total=total,
             page=page,
@@ -411,22 +412,112 @@ async def get_user_recommendations(
             has_next=has_next
         )
         
-        print(f"✅ 推荐API调用成功: 返回 {len(recommendations)} 条内容")
-        return response
-        
     except Exception as e:
-        error_msg = f"推荐服务错误: {str(e)}"
-        print(f"❌ {error_msg}")
-        print(f"📍 错误类型: {type(e).__name__}")
-        
-        # 返回空的推荐结果而不是抛出异常
+        print(f"❌ 推荐API错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        # 返回空结果而不是抛出异常
         return ContentListResponse(
             items=[],
             total=0,
             page=page,
-            page_size=page_size,
+            page_size=page_size if 'page_size' in locals() else 10,
             has_next=False
         )
+
+@router.get("/{user_id}/tiered-recommendations")
+async def get_user_tiered_recommendations(
+    user_id: str,
+    primary_limit: int = Query(6, ge=1, le=20, description="精准推荐数量"),
+    secondary_limit: int = Query(4, ge=1, le=20, description="扩展推荐数量"),
+    db=Depends(get_database)
+):
+    """获取用户分级推荐内容：精准推荐 + 扩展推荐"""
+    print(f"🎯 分级推荐API调用: user_id={user_id}, primary={primary_limit}, secondary={secondary_limit}")
+    
+    try:
+        # 创建推荐服务实例
+        recommendation_service = RecommendationService(db)
+        
+        # 获取分级推荐内容
+        tiered_result = await recommendation_service.get_tiered_recommendations(
+            user_id=user_id,
+            primary_limit=primary_limit,
+            secondary_limit=secondary_limit
+        )
+        
+        print(f"✅ 分级推荐成功: 精准{tiered_result['total_primary']}篇，扩展{tiered_result['total_secondary']}篇")
+        
+        return {
+            "status": "success",
+            "data": {
+                "primary_recommendations": [
+                    {
+                        "id": content.id,
+                        "title": content.title,
+                        "content": content.content[:200] + "..." if len(content.content) > 200 else content.content,
+                        "type": content.type,
+                        "source": content.source,
+                        "publish_time": content.publish_time,
+                        "link": content.link,
+                        "relevance_score": getattr(content, 'relevance_score', 0.0),
+                        "basic_info_tags": getattr(content, 'basic_info_tags', []),
+                        "region_tags": getattr(content, 'region_tags', []),
+                        "energy_type_tags": getattr(content, 'energy_type_tags', []),
+                        "business_field_tags": getattr(content, 'business_field_tags', []),
+                        "beneficiary_tags": getattr(content, 'beneficiary_tags', []),
+                        "policy_measure_tags": getattr(content, 'policy_measure_tags', []),
+                        "importance_tags": getattr(content, 'importance_tags', [])
+                    }
+                    for content in tiered_result["primary_recommendations"]
+                ],
+                "secondary_recommendations": [
+                    {
+                        "id": content.id,
+                        "title": content.title,
+                        "content": content.content[:200] + "..." if len(content.content) > 200 else content.content,
+                        "type": content.type,
+                        "source": content.source,
+                        "publish_time": content.publish_time,
+                        "link": content.link,
+                        "relevance_score": getattr(content, 'relevance_score', 0.0),
+                        "basic_info_tags": getattr(content, 'basic_info_tags', []),
+                        "region_tags": getattr(content, 'region_tags', []),
+                        "energy_type_tags": getattr(content, 'energy_type_tags', []),
+                        "business_field_tags": getattr(content, 'business_field_tags', []),
+                        "beneficiary_tags": getattr(content, 'beneficiary_tags', []),
+                        "policy_measure_tags": getattr(content, 'policy_measure_tags', []),
+                        "importance_tags": getattr(content, 'importance_tags', [])
+                    }
+                    for content in tiered_result["secondary_recommendations"]
+                ],
+                "stats": {
+                    "total_primary": tiered_result["total_primary"],
+                    "total_secondary": tiered_result["total_secondary"],
+                    "primary_tags_used": tiered_result.get("primary_tags_used", []),
+                    "secondary_tags_used": tiered_result.get("secondary_tags_used", [])
+                }
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ 分级推荐API错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        return {
+            "status": "error",
+            "message": f"获取分级推荐失败: {str(e)}",
+            "data": {
+                "primary_recommendations": [],
+                "secondary_recommendations": [],
+                "stats": {
+                    "total_primary": 0,
+                    "total_secondary": 0,
+                    "primary_tags_used": [],
+                    "secondary_tags_used": []
+                }
+            }
+        }
 
 @router.post("/behavior")
 async def record_user_behavior(
@@ -541,4 +632,21 @@ async def get_demo_user_tags(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get demo user tags: {str(e)}"
+        )
+
+@router.get("/provinces-with-cities")
+async def get_provinces_with_cities():
+    """获取省份及其城市的结构化数据"""
+    try:
+        provinces_data = RegionMapper.get_provinces_with_cities()
+        
+        return {
+            "provinces": provinces_data,
+            "total_provinces": len(provinces_data),
+            "total_cities": sum(p["city_count"] for p in provinces_data)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get provinces with cities: {str(e)}"
         )

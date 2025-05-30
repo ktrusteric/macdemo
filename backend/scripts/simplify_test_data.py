@@ -2,6 +2,7 @@ import json
 import random
 import os
 from typing import List, Dict, Any
+from china_regions import find_regions_in_text, classify_region_type
 
 def parse_tag_string(tag_str: str) -> List[str]:
     """解析标签字符串，处理各种格式"""
@@ -10,15 +11,18 @@ def parse_tag_string(tag_str: str) -> List[str]:
     
     # 移除外层的单引号和方括号
     tag_str = tag_str.strip()
-    if tag_str.startswith("['") and tag_str.endswith("']"):
+    if tag_str.startswith("[") and tag_str.endswith("]"):
         # 处理 "['tag1', 'tag2']" 格式
         try:
             import ast
             return ast.literal_eval(tag_str)
         except:
             # 如果解析失败，手动处理
-            content = tag_str[2:-2]  # 移除 ['']
+            content = tag_str[1:-1]  # 移除 []
             if content:
+                # 处理引号
+                if content.startswith("'") and content.endswith("'"):
+                    content = content[1:-1]
                 tags = [tag.strip().strip("'\"") for tag in content.split("',")]
                 return [tag for tag in tags if tag]
     
@@ -27,17 +31,6 @@ def parse_tag_string(tag_str: str) -> List[str]:
 def simplify_article_tags(article: Dict[str, Any]) -> Dict[str, Any]:
     """简化单篇文章的标签，重点保留地域和能源类型，控制总数在3-5个"""
     
-    # 解析各类标签
-    region_tags = []
-    industry_tags = []
-    beneficiary_tags = []
-    policy_tags = []
-    importance_tags = []
-    business_tags = []
-    
-    # 处理原始标签格式
-    original_tags = parse_tag_string(article.get("地域标签", ""))
-    
     # 🔋 处理能源类型标签 - 优先使用规范化后的数据
     if "能源品种标签" in article and article["能源品种标签"]:
         # 使用规范化后的能源类型
@@ -45,65 +38,101 @@ def simplify_article_tags(article: Dict[str, Any]) -> Dict[str, Any]:
         print(f"   使用规范化能源类型: {energy_type_tags}")
     else:
         # 回退到原始标签解析
+        original_tags = parse_tag_string(article.get("地域标签", ""))
         energy_type_tags = []
         for tag in original_tags:
             if any(keyword in tag for keyword in ["天然气", "原油", "汽油", "柴油", "电力", "煤炭", "LNG", "LPG"]):
                 energy_type_tags.append(tag)
         energy_type_tags = energy_type_tags[:2]  # 最多2个
     
-    # 🏛️ 地域标签解析和优先级处理
-    for tag in original_tags:
-        tag_lower = tag.lower()
-        
-        # 城市级地域标签（优先级最高）
-        if any(city in tag for city in ["北京", "上海", "广州", "深圳", "杭州", "苏州", "成都", "武汉", "重庆", "西安", "天津"]):
-            region_tags.append(tag)
-        # 省份级地域标签
-        elif any(province in tag for province in ["江苏", "浙江", "广东", "山东", "河北", "四川", "湖北", "湖南", "安徽", "河南"]):
-            region_tags.append(tag)
-        # 其他地域相关
-        elif any(keyword in tag for keyword in ["市", "省", "区域", "地区", "华东", "华南", "华北", "华中", "西部", "东部"]):
-            if tag not in ["全国", "国内", "国际"]:  # 排除过于泛化的标签
-                region_tags.append(tag)
+    # 🏛️ 使用完整地域数据进行地域标签识别
+    article_text = article.get("标题", "") + " " + article.get("文章内容", "")
     
-    # 🏭 业务领域标签
+    # 🎯 优先使用规范化后的地域标签
+    if "规范化地域标签" in article and article["规范化地域标签"]:
+        # 使用规范化后的地域标签
+        selected_regions = article["规范化地域标签"][:2]  # 最多2个
+        print(f"   使用规范化地域标签: {selected_regions}")
+    else:
+        # 回退到实时地域识别
+        found_regions = find_regions_in_text(article_text)
+        
+        # 解析原始地域标签（作为补充）
+        original_region_tags = parse_tag_string(article.get("地域标签", ""))
+        
+        # 合并发现的地域和原始标签
+        all_region_candidates = []
+        
+        # 添加从文本中发现的地域
+        for region_info in found_regions:
+            all_region_candidates.append({
+                "name": region_info["name"],
+                "weight": region_info["weight"],
+                "level": region_info["level"],
+                "type": region_info["type"],
+                "source": "text_analysis"
+            })
+        
+        # 添加原始标签中的地域（给予较低权重）
+        for tag in original_region_tags:
+            region_info = classify_region_type(tag)
+            if region_info["type"] != "unknown":
+                # 避免重复
+                if not any(candidate["name"] == tag for candidate in all_region_candidates):
+                    all_region_candidates.append({
+                        "name": tag,
+                        "weight": region_info["weight"] * 0.8,  # 原始标签权重降低
+                        "level": region_info["level"],
+                        "type": region_info["type"],
+                        "source": "original_tags"
+                    })
+        
+        # 按权重和级别排序，选择最佳地域标签
+        all_region_candidates.sort(key=lambda x: (x["level"], x["weight"]), reverse=True)
+        
+        # 🎯 地域标签选择策略
+        selected_regions = []
+        
+        # 1. 优先选择直辖市和省会城市（level=4, weight>=2.5）
+        high_level_regions = [r for r in all_region_candidates if r["level"] == 4 and r["weight"] >= 2.5]
+        if high_level_regions:
+            selected_regions.append(high_level_regions[0]["name"])
+        
+        # 2. 如果没有高级别城市，选择省份级别的地域
+        if not selected_regions:
+            province_regions = [r for r in all_region_candidates if r["level"] == 3]
+            if province_regions:
+                selected_regions.append(province_regions[0]["name"])
+        
+        # 3. 最多再添加一个重要地域（避免过多地域标签）
+        remaining_regions = [r for r in all_region_candidates 
+                            if r["name"] not in selected_regions and r["weight"] >= 1.5]
+        if remaining_regions and len(selected_regions) < 2:
+            selected_regions.append(remaining_regions[0]["name"])
+        
+        print(f"   实时识别地域标签: {selected_regions}")
+    
+    # 🏭 处理其他类型标签
+    original_tags = parse_tag_string(article.get("业务领域/主题标签", ""))
+    business_tags = []
+    importance_tags = []
+    
     for tag in original_tags:
         if any(keyword in tag for keyword in ["发电", "炼化", "储运", "销售", "贸易", "运输", "配送", "零售"]):
             business_tags.append(tag)
-    
-    # 📊 重要性和政策标签（优先级较低）
-    for tag in original_tags:
-        if any(keyword in tag for keyword in ["重大", "重要", "关键", "核心"]):
+        elif any(keyword in tag for keyword in ["重大", "重要", "关键", "核心", "政策", "法规"]):
             importance_tags.append(tag)
-        elif any(keyword in tag for keyword in ["政策", "法规", "通知", "办法", "规定"]):
-            policy_tags.append(tag)
     
     # ⚖️ 标签数量平衡策略（目标：3-5个总标签）
     selected_tags = {
-        "region_tags": [],
+        "region_tags": selected_regions[:2],  # 最多2个地域标签
         "energy_type_tags": energy_type_tags,
-        "business_field_tags": [],
-        "basic_info_tags": [],
+        "business_field_tags": business_tags[:1],  # 最多1个业务标签
+        "basic_info_tags": [article.get("文档类型", "")] if article.get("文档类型") else [],
         "importance_tags": []
     }
     
-    # 1. 地域标签：最多2个，优先城市
-    city_regions = [tag for tag in region_tags if any(city in tag for city in ["北京", "上海", "广州", "深圳", "杭州", "苏州"])]
-    province_regions = [tag for tag in region_tags if tag not in city_regions]
-    
-    selected_tags["region_tags"].extend(city_regions[:1])  # 最多1个城市
-    if len(selected_tags["region_tags"]) < 2:
-        selected_tags["region_tags"].extend(province_regions[:2-len(selected_tags["region_tags"])])
-    
-    # 2. 业务领域：最多1个
-    selected_tags["business_field_tags"] = business_tags[:1]
-    
-    # 3. 基础信息：文档类型
-    doc_type = article.get("文档类型", "")
-    if doc_type:
-        selected_tags["basic_info_tags"] = [doc_type]
-    
-    # 4. 控制总标签数不超过5个
+    # 计算当前标签总数
     current_total = (
         len(selected_tags["region_tags"]) +
         len(selected_tags["energy_type_tags"]) +
@@ -115,6 +144,20 @@ def simplify_article_tags(article: Dict[str, Any]) -> Dict[str, Any]:
     if current_total < 3 and importance_tags:
         available_slots = min(3 - current_total, len(importance_tags))
         selected_tags["importance_tags"] = importance_tags[:available_slots]
+    
+    # 📊 输出地域识别详情
+    found_regions = []  # 确保变量总是被定义
+    if "规范化地域标签" in article and article["规范化地域标签"]:
+        # 使用规范化后的地域标签时，found_regions为空（因为没有实时识别）
+        pass
+    else:
+        # 只有在实时识别时才有found_regions数据
+        found_regions = find_regions_in_text(article_text)
+    
+    if found_regions:
+        print(f"   发现地域标签: {[r['name'] for r in found_regions[:3]]}")
+    
+    print(f"   最终选择地域: {selected_regions}")
     
     # 创建简化的文章数据
     simplified_article = article.copy()

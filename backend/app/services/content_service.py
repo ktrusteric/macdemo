@@ -73,6 +73,35 @@ class ContentService:
             sort_condition = sort_conditions.get(sort_by, [("publish_time", -1)])
             
             contents = []
+            
+            # 添加分类统计日志
+            if not content_type and not tags:  # 只在获取全部内容时统计
+                print("📊 内容分类统计:")
+                
+                # 按type字段统计
+                type_stats = {}
+                basic_info_stats = {}
+                
+                async for doc in self.collection.find({}):
+                    doc_type = doc.get('type')
+                    basic_info_tags = doc.get('basic_info_tags', [])
+                    
+                    # 统计type
+                    if doc_type:
+                        type_stats[doc_type] = type_stats.get(doc_type, 0) + 1
+                    
+                    # 统计basic_info_tags
+                    for tag in basic_info_tags:
+                        basic_info_stats[tag] = basic_info_stats.get(tag, 0) + 1
+                
+                print(f"  📈 行情咨询 (行业资讯): {basic_info_stats.get('行业资讯', 0)}篇")
+                print(f"  📋 政策法规 (政策法规): {basic_info_stats.get('政策法规', 0)}篇")
+                print(f"  📢 交易公告 (交易公告): {basic_info_stats.get('交易公告', 0)}篇")
+                print(f"  💰 调价公告 (调价公告): {basic_info_stats.get('调价公告', 0)}篇")
+                print(f"  📊 总公告数: {basic_info_stats.get('交易公告', 0) + basic_info_stats.get('调价公告', 0)}篇")
+                print(f"  📚 总文章数: {sum(type_stats.values())}篇")
+                print(f"  🏷️ 按type统计: {type_stats}")
+            
             cursor = self.collection.find(query).sort(sort_condition).skip(skip).limit(limit)
             
             async for document in cursor:
