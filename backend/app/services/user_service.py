@@ -117,13 +117,13 @@ class UserService:
                     created_at=datetime.utcnow()
                 ))
             
-            # 4. 能源类型标签（如果提供）
+            # 4. 能源类型标签（如果提供，权重设为2.0，与省份标签相当）
             if energy_types:
                 for energy_type in energy_types:
                     tags.append(UserTag(
                         category=TagCategory.ENERGY_TYPE,
                         name=energy_type,
-                        weight=1.0,
+                        weight=2.0,  # 提升能源类型权重
                         source=TagSource.PRESET,
                         created_at=datetime.utcnow()
                     ))

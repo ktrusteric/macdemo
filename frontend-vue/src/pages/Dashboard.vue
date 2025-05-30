@@ -71,7 +71,19 @@
                 :type="getTimelineType(item.type)"
               >
                 <el-card class="recommendation-card">
-                  <h4>{{ item.title }}</h4>
+                  <h4>
+                    <a 
+                      v-if="item.link" 
+                      :href="item.link" 
+                      target="_blank" 
+                      style="color: #409EFF; text-decoration: none; font-weight: bold;"
+                      @mouseover="$event.target.style.color='#66b1ff'"
+                      @mouseout="$event.target.style.color='#409EFF'"
+                    >
+                      {{ item.title }}
+                    </a>
+                    <span v-else style="font-weight: bold;">{{ item.title }}</span>
+                  </h4>
                   <p>{{ item.content }}</p>
                   <div class="tags">
                     <el-tag 

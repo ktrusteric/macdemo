@@ -24,7 +24,7 @@ CONTENT_TYPE_MAP = {
 # 密码加密上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-async def import_articles(use_simplified=False):
+async def import_articles(use_simplified=True):
     """导入示例文章数据"""
     client = AsyncIOMotorClient(settings.MONGODB_URL)
     db = client[settings.DATABASE_NAME]
@@ -37,7 +37,7 @@ async def import_articles(use_simplified=False):
     # 选择数据文件
     if use_simplified:
         json_file_path = os.path.join(os.path.dirname(__file__), "简化测试数据.json")
-        print("🔧 使用简化测试数据（每篇文章3-6个标签，便于测试）")
+        print("🔧 使用简化测试数据（每篇文章3-5个标签，便于测试）")
     else:
         json_file_path = os.path.join(os.path.dirname(__file__), "信息发布文章与标签.json")
         print("📋 使用完整原始数据（每篇文章15+个标签）")
@@ -151,7 +151,40 @@ async def import_articles(use_simplified=False):
             continue
     
     print(f"\nTotal articles imported: {imported_count}")
-    client.close()
+    
+    # 📊 显示能源类型分布统计
+    energy_type_counts = {}
+    total_articles = imported_count
+    
+    for article in articles_data:
+        energy_types = article.get("energy_type_tags", [])
+        for energy_type in energy_types:
+            energy_type_counts[energy_type] = energy_type_counts.get(energy_type, 0) + 1
+    
+    if energy_type_counts:
+        print("\n🔋 能源类型分布统计：")
+        sorted_energy = sorted(energy_type_counts.items(), key=lambda x: x[1], reverse=True)
+        for energy_type, count in sorted_energy:
+            percentage = (count / total_articles) * 100
+            print(f"   {energy_type}: {count} 篇 ({percentage:.1f}%)")
+        
+        print(f"\n📈 覆盖率统计：")
+        articles_with_energy = sum(1 for article in articles_data if article.get("energy_type_tags"))
+        print(f"   有能源类型标签的文章: {articles_with_energy}/{total_articles} ({articles_with_energy/total_articles*100:.1f}%)")
+        
+        # 显示天然气细分统计
+        lng_count = energy_type_counts.get("液化天然气(LNG)", 0)
+        png_count = energy_type_counts.get("管道天然气(PNG)", 0) 
+        gas_count = energy_type_counts.get("天然气", 0)
+        total_gas = lng_count + png_count + gas_count
+        if total_gas > 0:
+            print(f"\n💨 天然气类型细分：")
+            print(f"   液化天然气(LNG): {lng_count} 篇 ({lng_count/total_gas*100:.1f}%)")
+            print(f"   管道天然气(PNG): {png_count} 篇 ({png_count/total_gas*100:.1f}%)")
+            print(f"   通用天然气: {gas_count} 篇 ({gas_count/total_gas*100:.1f}%)")
+    
+    await client.close()
+    print("\n✅ 数据导入完成！可以启动服务进行测试。")
 
 async def create_sample_users():
     """创建示例用户数据（包含完整账户信息和正确的能源类型标签）"""
@@ -286,15 +319,15 @@ async def main():
     import sys
     
     # 检查命令行参数
-    use_simplified = False
+    use_simplified = True  # 默认使用简化数据
     if len(sys.argv) > 1:
-        if sys.argv[1] == '--simplified' or sys.argv[1] == '-s':
-            use_simplified = True
+        if sys.argv[1] == '--full' or sys.argv[1] == '-f':
+            use_simplified = False
         elif sys.argv[1] == '--help' or sys.argv[1] == '-h':
             print("使用方法:")
-            print("  python import_sample_data.py           # 使用完整原始数据（每篇15+标签）")
-            print("  python import_sample_data.py -s        # 使用简化测试数据（每篇3-6标签）")
-            print("  python import_sample_data.py --simplified  # 同上")
+            print("  python import_sample_data.py           # 使用简化测试数据（每篇3-5标签）")
+            print("  python import_sample_data.py -f        # 使用完整原始数据（每篇15+标签）")
+            print("  python import_sample_data.py --full    # 同上")
             return
     
     print("Starting data import...")

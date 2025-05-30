@@ -241,7 +241,7 @@ class RecommendationService:
         user_tags: UserTags,
         content: Content
     ) -> float:
-        """计算内容与用户标签的相关性分数"""
+        """计算内容与用户标签的相关性分数 - 增强地域和能源类型权重"""
         try:
             if not user_tags.tags:
                 return 0.0
@@ -250,30 +250,72 @@ class RecommendationService:
             matched_tags = 0
             tag_dict = {tag.name: tag.weight for tag in user_tags.tags}
             
-            # 计算各类标签的匹配分数
+            # 🎯 定义标签权重增强系数
+            TAG_WEIGHT_MULTIPLIERS = {
+                "region": 3.0,      # 地域标签权重最高（城市/省份/区域）
+                "energy_type": 2.5, # 能源类型权重第二高
+                "basic_info": 1.0,  # 基础信息标签保持原权重
+                "business": 0.8,    # 业务标签权重降低
+                "policy": 0.8,      # 政策标签权重降低 
+                "importance": 0.6,  # 重要性标签权重最低
+                "beneficiary": 0.6  # 受益主体权重最低
+            }
+            
+            # 按标签类别分别计算权重分数
+            tag_categories = [
+                ("basic_info_tags", "basic_info"),
+                ("region_tags", "region"),
+                ("energy_type_tags", "energy_type"),
+                ("business_field_tags", "business"),
+                ("policy_measure_tags", "policy"),
+                ("importance_tags", "importance"),
+                ("beneficiary_tags", "beneficiary")
+            ]
+            
+            for content_field, category_key in tag_categories:
+                content_tags = getattr(content, content_field, [])
+                category_multiplier = TAG_WEIGHT_MULTIPLIERS.get(category_key, 1.0)
+                
+                for content_tag in content_tags:
+                    if content_tag in tag_dict:
+                        # 基础分数 = 用户标签权重 × 类别增强系数
+                        base_score = tag_dict[content_tag] * category_multiplier
+                        total_score += base_score
+                        matched_tags += 1
+            
+            if matched_tags == 0:
+                return 0.0
+            
+            # 计算总标签数（用于匹配度计算）
             all_content_tags = (
                 content.basic_info_tags +
                 content.region_tags +
                 content.energy_type_tags +
                 content.business_field_tags +
-                content.beneficiary_tags +
-                content.policy_measure_tags +
+                getattr(content, 'beneficiary_tags', []) +
+                getattr(content, 'policy_measure_tags', []) +
                 content.importance_tags
             )
             
-            for content_tag in all_content_tags:
-                if content_tag in tag_dict:
-                    total_score += tag_dict[content_tag]
-                    matched_tags += 1
-            
-            # 考虑时效性因子
+            # 计算时效性因子
             time_factor = self._calculate_time_factor(content.publish_time)
             
-            # 考虑标签匹配度
-            tag_match_factor = matched_tags / len(all_content_tags) if all_content_tags else 0
+            # 计算标签匹配度（给予地域和能源类型更高权重）
+            region_match = len([tag for tag in content.region_tags if tag in tag_dict])
+            energy_match = len([tag for tag in content.energy_type_tags if tag in tag_dict])
             
-            # 最终评分 = 标签权重分数 * 时效性因子 * 标签匹配度因子
-            final_score = (total_score * time_factor * tag_match_factor) / 10.0
+            # 如果地域或能源类型匹配，给予额外加分
+            bonus_factor = 1.0
+            if region_match > 0:
+                bonus_factor += 0.3  # 地域匹配额外30%加分
+            if energy_match > 0:
+                bonus_factor += 0.2  # 能源类型匹配额外20%加分
+            
+            # 基础匹配度
+            tag_match_factor = matched_tags / max(len(all_content_tags), 1)
+            
+            # 最终评分 = (标签权重分数 × 时效性因子 × 匹配度因子 × 奖励因子) / 标准化因子
+            final_score = (total_score * time_factor * tag_match_factor * bonus_factor) / 15.0
             
             return min(final_score, 1.0)
         except Exception as e:
