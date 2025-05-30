@@ -1,0 +1,548 @@
+[
+  {
+    "发布日期": "2024-06-25",
+    "文档类型": "调价公告",
+    "发布时间": "2024-12-08",
+    "来源机构": "上海市发改委",
+    "标题": "上海天然气价格调整通知",
+    "文章内容": "根据国家发改委相关规定，结合本市天然气成本变化情况，决定调整本市天然气销售价格...",
+    "链接": "https://example.com/article/1",
+    "basic_info_tags": [],
+    "region_tags": [
+      "上海",
+      "华东地区"
+    ],
+    "energy_type_tags": [
+      "天然气"
+    ],
+    "business_field_tags": [],
+    "beneficiary_tags": [
+      "能源企业"
+    ],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": []
+  },
+  {
+    "发布日期": "2024-09-30",
+    "文档类型": "交易公告",
+    "发布时间": "2024-08-22",
+    "来源机构": "华南电力交易中心",
+    "标题": "华南地区电力市场交易情况通报 (2)",
+    "文章内容": "本月华南地区电力市场交易活跃，累计成交电量XX亿千瓦时，市场化程度进一步提升...",
+    "链接": "https://example.com/article/2",
+    "basic_info_tags": [],
+    "region_tags": [
+      "华南地区"
+    ],
+    "energy_type_tags": [
+      "电力"
+    ],
+    "business_field_tags": [
+      "市场动态"
+    ],
+    "beneficiary_tags": [],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": [
+      "常规公告"
+    ]
+  },
+  {
+    "发布日期": "2024-10-07",
+    "文档类型": "行业资讯",
+    "发布时间": "2024-11-03",
+    "来源机构": "能源研究院",
+    "标题": "国际石油市场价格波动分析 (3)",
+    "文章内容": "受地缘政治因素影响，国际原油价格出现大幅波动，对国内成品油市场产生重要影响...",
+    "链接": "https://example.com/article/3",
+    "basic_info_tags": [
+      "行业资讯"
+    ],
+    "region_tags": [
+      "全国"
+    ],
+    "energy_type_tags": [],
+    "business_field_tags": [
+      "价格变化",
+      "国际合作"
+    ],
+    "beneficiary_tags": [
+      "能源企业"
+    ],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": [
+      "权威发布"
+    ]
+  },
+  {
+    "发布日期": "2024-12-24",
+    "文档类型": "行业资讯",
+    "发布时间": "2024-09-28",
+    "来源机构": "能源研究院",
+    "标题": "国际石油市场价格波动分析 (4)",
+    "文章内容": "受地缘政治因素影响，国际原油价格出现大幅波动，对国内成品油市场产生重要影响...",
+    "链接": "https://example.com/article/4",
+    "basic_info_tags": [
+      "行业资讯"
+    ],
+    "region_tags": [
+      "全国"
+    ],
+    "energy_type_tags": [
+      "原油"
+    ],
+    "business_field_tags": [
+      "价格变化"
+    ],
+    "beneficiary_tags": [],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": [
+      "权威发布"
+    ]
+  },
+  {
+    "发布日期": "2024-11-24",
+    "文档类型": "交易公告",
+    "发布时间": "2024-09-18",
+    "来源机构": "华南电力交易中心",
+    "标题": "华南地区电力市场交易情况通报 (5)",
+    "文章内容": "本月华南地区电力市场交易活跃，累计成交电量XX亿千瓦时，市场化程度进一步提升...",
+    "链接": "https://example.com/article/5",
+    "basic_info_tags": [
+      "交易公告"
+    ],
+    "region_tags": [
+      "华南地区"
+    ],
+    "energy_type_tags": [
+      "电力"
+    ],
+    "business_field_tags": [
+      "市场动态"
+    ],
+    "beneficiary_tags": [
+      "能源企业"
+    ],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": []
+  },
+  {
+    "发布日期": "2025-05-13",
+    "文档类型": "交易公告",
+    "发布时间": "2024-11-18",
+    "来源机构": "华南电力交易中心",
+    "标题": "华南地区电力市场交易情况通报 (6)",
+    "文章内容": "本月华南地区电力市场交易活跃，累计成交电量XX亿千瓦时，市场化程度进一步提升...",
+    "链接": "https://example.com/article/6",
+    "basic_info_tags": [],
+    "region_tags": [
+      "华南地区"
+    ],
+    "energy_type_tags": [
+      "电力"
+    ],
+    "business_field_tags": [
+      "市场动态"
+    ],
+    "beneficiary_tags": [
+      "能源企业"
+    ],
+    "policy_measure_tags": [],
+    "importance_tags": []
+  },
+  {
+    "发布日期": "2024-08-24",
+    "文档类型": "行业资讯",
+    "发布时间": "2025-03-26",
+    "来源机构": "北京市环保局",
+    "标题": "北京市煤炭消费总量控制工作进展 (7)",
+    "文章内容": "北京市持续推进煤炭消费总量控制，清洁能源替代工作取得显著成效...",
+    "链接": "https://example.com/article/7",
+    "basic_info_tags": [],
+    "region_tags": [
+      "华北地区",
+      "北京"
+    ],
+    "energy_type_tags": [
+      "可再生能源"
+    ],
+    "business_field_tags": [
+      "政策解读"
+    ],
+    "beneficiary_tags": [],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": [
+      "权威发布"
+    ]
+  },
+  {
+    "发布日期": "2024-10-27",
+    "文档类型": "行业资讯",
+    "发布时间": "2024-11-30",
+    "来源机构": "北京市环保局",
+    "标题": "北京市煤炭消费总量控制工作进展 (8)",
+    "文章内容": "北京市持续推进煤炭消费总量控制，清洁能源替代工作取得显著成效...",
+    "链接": "https://example.com/article/8",
+    "basic_info_tags": [
+      "行业资讯"
+    ],
+    "region_tags": [
+      "华北地区",
+      "北京"
+    ],
+    "energy_type_tags": [
+      "煤炭"
+    ],
+    "business_field_tags": [
+      "政策解读"
+    ],
+    "beneficiary_tags": [
+      "政府机构"
+    ],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": [
+      "权威发布"
+    ]
+  },
+  {
+    "发布日期": "2025-05-06",
+    "文档类型": "政策法规",
+    "发布时间": "2024-07-24",
+    "来源机构": "国家能源局",
+    "标题": "国家能源局发布2025年能源发展指导意见 (9)",
+    "文章内容": "为深入贯彻落实党中央、国务院关于能源工作的重大决策部署，国家能源局制定了《2025年能源工作指导意见》...",
+    "链接": "https://example.com/article/9",
+    "basic_info_tags": [
+      "政策法规"
+    ],
+    "region_tags": [],
+    "energy_type_tags": [],
+    "business_field_tags": [
+      "政策解读"
+    ],
+    "beneficiary_tags": [
+      "能源企业",
+      "政府机构"
+    ],
+    "policy_measure_tags": [
+      "投资支持"
+    ],
+    "importance_tags": [
+      "国家级"
+    ]
+  },
+  {
+    "发布日期": "2024-11-04",
+    "文档类型": "政策法规",
+    "发布时间": "2024-06-09",
+    "来源机构": "国家能源局",
+    "标题": "国家能源局发布2025年能源发展指导意见 (10)",
+    "文章内容": "为深入贯彻落实党中央、国务院关于能源工作的重大决策部署，国家能源局制定了《2025年能源工作指导意见》...",
+    "链接": "https://example.com/article/10",
+    "basic_info_tags": [],
+    "region_tags": [],
+    "energy_type_tags": [
+      "电力"
+    ],
+    "business_field_tags": [
+      "政策解读"
+    ],
+    "beneficiary_tags": [
+      "能源企业"
+    ],
+    "policy_measure_tags": [
+      "投资支持"
+    ],
+    "importance_tags": [
+      "重要政策"
+    ]
+  },
+  {
+    "发布日期": "2025-01-21",
+    "文档类型": "行业资讯",
+    "发布时间": "2024-12-23",
+    "来源机构": "南方电网",
+    "标题": "广州电力系统智能化升级项目启动 (11)",
+    "文章内容": "广州供电局启动大规模电力系统智能化升级项目，提升电网运行效率和可靠性...",
+    "链接": "https://example.com/article/11",
+    "basic_info_tags": [
+      "行业资讯"
+    ],
+    "region_tags": [
+      "华南地区"
+    ],
+    "energy_type_tags": [],
+    "business_field_tags": [
+      "技术创新"
+    ],
+    "beneficiary_tags": [],
+    "policy_measure_tags": [
+      "技术合作"
+    ],
+    "importance_tags": [
+      "常规公告"
+    ]
+  },
+  {
+    "发布日期": "2024-08-08",
+    "文档类型": "政策法规",
+    "发布时间": "2024-07-17",
+    "来源机构": "国家能源局",
+    "标题": "民营企业参与能源投资新政策解读 (12)",
+    "文章内容": "为支持民营企业参与能源领域投资，国家出台了一系列扶持政策，降低准入门槛...",
+    "链接": "https://example.com/article/12",
+    "basic_info_tags": [
+      "政策法规"
+    ],
+    "region_tags": [
+      "全国"
+    ],
+    "energy_type_tags": [],
+    "business_field_tags": [
+      "政策解读"
+    ],
+    "beneficiary_tags": [
+      "民营企业"
+    ],
+    "policy_measure_tags": [
+      "投资支持"
+    ],
+    "importance_tags": [
+      "重要政策",
+      "国家级"
+    ]
+  },
+  {
+    "发布日期": "2025-02-24",
+    "文档类型": "行业资讯",
+    "发布时间": "2024-12-11",
+    "来源机构": "能源研究院",
+    "标题": "国际石油市场价格波动分析 (13)",
+    "文章内容": "受地缘政治因素影响，国际原油价格出现大幅波动，对国内成品油市场产生重要影响...",
+    "链接": "https://example.com/article/13",
+    "basic_info_tags": [],
+    "region_tags": [
+      "全国"
+    ],
+    "energy_type_tags": [
+      "原油"
+    ],
+    "business_field_tags": [
+      "国际合作",
+      "价格变化"
+    ],
+    "beneficiary_tags": [
+      "能源企业"
+    ],
+    "policy_measure_tags": [],
+    "importance_tags": [
+      "权威发布"
+    ]
+  },
+  {
+    "发布日期": "2024-05-29",
+    "文档类型": "行业资讯",
+    "发布时间": "2025-03-15",
+    "来源机构": "能源研究院",
+    "标题": "国际石油市场价格波动分析 (14)",
+    "文章内容": "受地缘政治因素影响，国际原油价格出现大幅波动，对国内成品油市场产生重要影响...",
+    "链接": "https://example.com/article/14",
+    "basic_info_tags": [
+      "行业资讯"
+    ],
+    "region_tags": [
+      "全国"
+    ],
+    "energy_type_tags": [
+      "原油"
+    ],
+    "business_field_tags": [
+      "国际合作",
+      "价格变化"
+    ],
+    "beneficiary_tags": [],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": [
+      "权威发布"
+    ]
+  },
+  {
+    "发布日期": "2024-09-14",
+    "文档类型": "行业资讯",
+    "发布时间": "2024-09-24",
+    "来源机构": "北京市环保局",
+    "标题": "北京市煤炭消费总量控制工作进展 (15)",
+    "文章内容": "北京市持续推进煤炭消费总量控制，清洁能源替代工作取得显著成效...",
+    "链接": "https://example.com/article/15",
+    "basic_info_tags": [
+      "行业资讯"
+    ],
+    "region_tags": [
+      "华北地区"
+    ],
+    "energy_type_tags": [],
+    "business_field_tags": [
+      "政策解读"
+    ],
+    "beneficiary_tags": [
+      "政府机构"
+    ],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": [
+      "权威发布"
+    ]
+  },
+  {
+    "发布日期": "2024-10-26",
+    "文档类型": "政策法规",
+    "发布时间": "2025-01-14",
+    "来源机构": "国家能源局",
+    "标题": "民营企业参与能源投资新政策解读 (16)",
+    "文章内容": "为支持民营企业参与能源领域投资，国家出台了一系列扶持政策，降低准入门槛...",
+    "链接": "https://example.com/article/16",
+    "basic_info_tags": [],
+    "region_tags": [
+      "全国"
+    ],
+    "energy_type_tags": [
+      "可再生能源"
+    ],
+    "business_field_tags": [
+      "政策解读"
+    ],
+    "beneficiary_tags": [
+      "民营企业"
+    ],
+    "policy_measure_tags": [
+      "投资支持"
+    ],
+    "importance_tags": [
+      "重要政策"
+    ]
+  },
+  {
+    "发布日期": "2024-08-01",
+    "文档类型": "行业资讯",
+    "发布时间": "2024-07-25",
+    "来源机构": "北京市环保局",
+    "标题": "北京市煤炭消费总量控制工作进展 (17)",
+    "文章内容": "北京市持续推进煤炭消费总量控制，清洁能源替代工作取得显著成效...",
+    "链接": "https://example.com/article/17",
+    "basic_info_tags": [],
+    "region_tags": [
+      "华北地区"
+    ],
+    "energy_type_tags": [
+      "可再生能源",
+      "煤炭"
+    ],
+    "business_field_tags": [],
+    "beneficiary_tags": [
+      "政府机构"
+    ],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": [
+      "权威发布"
+    ]
+  },
+  {
+    "发布日期": "2024-07-26",
+    "文档类型": "政策法规",
+    "发布时间": "2024-06-07",
+    "来源机构": "国家能源局",
+    "标题": "民营企业参与能源投资新政策解读 (18)",
+    "文章内容": "为支持民营企业参与能源领域投资，国家出台了一系列扶持政策，降低准入门槛...",
+    "链接": "https://example.com/article/18",
+    "basic_info_tags": [],
+    "region_tags": [
+      "全国"
+    ],
+    "energy_type_tags": [
+      "可再生能源"
+    ],
+    "business_field_tags": [],
+    "beneficiary_tags": [
+      "民营企业"
+    ],
+    "policy_measure_tags": [
+      "投资支持"
+    ],
+    "importance_tags": [
+      "国家级"
+    ]
+  },
+  {
+    "发布日期": "2025-03-06",
+    "文档类型": "行业资讯",
+    "发布时间": "2024-10-24",
+    "来源机构": "南方电网",
+    "标题": "广州电力系统智能化升级项目启动 (19)",
+    "文章内容": "广州供电局启动大规模电力系统智能化升级项目，提升电网运行效率和可靠性...",
+    "链接": "https://example.com/article/19",
+    "basic_info_tags": [
+      "行业资讯"
+    ],
+    "region_tags": [
+      "广州",
+      "华南地区"
+    ],
+    "energy_type_tags": [
+      "电力"
+    ],
+    "business_field_tags": [
+      "技术创新"
+    ],
+    "beneficiary_tags": [
+      "能源企业"
+    ],
+    "policy_measure_tags": [
+      "技术合作"
+    ],
+    "importance_tags": [
+      "常规公告"
+    ]
+  },
+  {
+    "发布日期": "2025-05-05",
+    "文档类型": "交易公告",
+    "发布时间": "2024-08-02",
+    "来源机构": "华南电力交易中心",
+    "标题": "华南地区电力市场交易情况通报 (20)",
+    "文章内容": "本月华南地区电力市场交易活跃，累计成交电量XX亿千瓦时，市场化程度进一步提升...",
+    "链接": "https://example.com/article/20",
+    "basic_info_tags": [
+      "交易公告"
+    ],
+    "region_tags": [
+      "华南地区"
+    ],
+    "energy_type_tags": [],
+    "business_field_tags": [],
+    "beneficiary_tags": [
+      "能源企业"
+    ],
+    "policy_measure_tags": [
+      "市场监管"
+    ],
+    "importance_tags": []
+  }
+]

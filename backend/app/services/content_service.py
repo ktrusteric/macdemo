@@ -76,7 +76,10 @@ class ContentService:
             cursor = self.collection.find(query).sort(sort_condition).skip(skip).limit(limit)
             
             async for document in cursor:
-                document['id'] = str(document['_id'])
+                # 正确处理 MongoDB ObjectId
+                if '_id' in document:
+                    document['id'] = str(document['_id'])
+                    del document['_id']  # 删除原始的 _id 字段
                 contents.append(Content(**document))
             
             return contents
@@ -221,7 +224,10 @@ class ContentService:
             cursor = self.collection.find(query).sort([("publish_time", -1)]).skip(skip).limit(limit)
             
             async for document in cursor:
-                document['id'] = str(document['_id'])
+                # 正确处理 MongoDB ObjectId
+                if '_id' in document:
+                    document['id'] = str(document['_id'])
+                    del document['_id']  # 删除原始的 _id 字段
                 contents.append(Content(**document))
             
             return contents
@@ -274,9 +280,64 @@ class ContentService:
             
             contents = []
             async for document in self.collection.aggregate(pipeline):
-                document['id'] = str(document['_id'])
+                # 正确处理 MongoDB ObjectId
+                if '_id' in document:
+                    document['id'] = str(document['_id'])
+                    del document['_id']  # 删除原始的 _id 字段
                 contents.append(Content(**document))
             
             return contents
         except Exception as e:
-            raise Exception(f"Failed to get content by user tags: {str(e)}") 
+            raise Exception(f"Failed to get content by user tags: {str(e)}")
+
+    async def get_content_by_tags(
+        self,
+        basic_info_tags: List[str] = None,
+        region_tags: List[str] = None,
+        energy_type_tags: List[str] = None,
+        business_field_tags: List[str] = None,
+        beneficiary_tags: List[str] = None,
+        policy_measure_tags: List[str] = None,
+        importance_tags: List[str] = None,
+        limit: int = 10
+    ) -> List[Content]:
+        """根据分类标签获取内容"""
+        try:
+            # 构建查询条件
+            tag_conditions = []
+            
+            if basic_info_tags:
+                tag_conditions.append({"basic_info_tags": {"$in": basic_info_tags}})
+            if region_tags:
+                tag_conditions.append({"region_tags": {"$in": region_tags}})
+            if energy_type_tags:
+                tag_conditions.append({"energy_type_tags": {"$in": energy_type_tags}})
+            if business_field_tags:
+                tag_conditions.append({"business_field_tags": {"$in": business_field_tags}})
+            if beneficiary_tags:
+                tag_conditions.append({"beneficiary_tags": {"$in": beneficiary_tags}})
+            if policy_measure_tags:
+                tag_conditions.append({"policy_measure_tags": {"$in": policy_measure_tags}})
+            if importance_tags:
+                tag_conditions.append({"importance_tags": {"$in": importance_tags}})
+            
+            if not tag_conditions:
+                # 如果没有标签条件，返回最新内容
+                return await self.get_content_list(limit=limit, sort_by="latest")
+            
+            # 使用$or查询匹配任一标签
+            query = {"$or": tag_conditions}
+            
+            contents = []
+            cursor = self.collection.find(query).sort([("publish_time", -1)]).limit(limit)
+            
+            async for document in cursor:
+                # 正确处理 MongoDB ObjectId
+                if '_id' in document:
+                    document['id'] = str(document['_id'])
+                    del document['_id']  # 删除原始的 _id 字段
+                contents.append(Content(**document))
+            
+            return contents
+        except Exception as e:
+            raise Exception(f"Failed to get content by tags: {str(e)}") 

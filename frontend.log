@@ -3,11 +3,7 @@
 > vite
 
 
-  VITE v6.3.5  ready in 518 ms
+  VITE v6.3.5  ready in 93 ms
 
   ➜  Local:   http://localhost:5173/
-  ➜  Network: http://172.31.16.2:5173/
-  ➜  Network: http://172.18.0.1:5173/
-  ➜  Network: http://172.19.0.1:5173/
-8:53:58 AM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/pages/Settings/index.tsx, /src/pages/Dashboard/index.tsx
-8:55:21 AM [vite] (client) hmr update /src/pages/Dashboard/index.tsx, /src/index.css
+  ➜  Network: http://192.168.1.134:5173/

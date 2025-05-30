@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import connect_to_mongo, close_mongo_connection
-from app.api import users, content, recommendations, ai_integration
+from app.api import users, content, recommendations, ai_integration, region
 
 def create_application() -> FastAPI:
     application = FastAPI(
@@ -40,6 +40,11 @@ def create_application() -> FastAPI:
         ai_integration.router, 
         prefix=f"{settings.API_V1_STR}/ai", 
         tags=["ai"]
+    )
+    application.include_router(
+        region.router, 
+        prefix=f"{settings.API_V1_STR}/region", 
+        tags=["region"]
     )
     
     # 添加用户行为记录路由

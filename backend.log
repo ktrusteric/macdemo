@@ -1,908 +1,114 @@
-INFO:     Will watch for changes in these directories: ['/root/energy-trading-system/backend']
+INFO:     Will watch for changes in these directories: ['/Users/eric/Documents/GitHub/macdemo/backend']
 INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [1845056] using StatReload
-INFO:     Started server process [1845064]
+INFO:     Started reloader process [32603] using StatReload
+INFO:     Started server process [32606]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 Successfully connected to MongoDB
-INFO:     127.0.0.1:42604 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "OPTIONS /api/v1/users/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "POST /api/v1/users/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:35508 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:35508 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46120 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35520 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46126 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35520 - "OPTIONS /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35530 - "OPTIONS /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:35508 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:35520 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35530 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35520 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:35530 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:35520 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35508 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46148 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35520 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46152 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46142 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46142 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46142 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46142 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46142 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46142 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:46142 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:46160 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46182 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46174 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46182 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46174 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46182 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46182 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46174 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46182 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46174 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46182 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46182 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47592 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46174 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47596 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46182 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46174 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47586 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46182 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46174 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:47586 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47588 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:46174 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46182 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47588 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51270 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:51276 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:51296 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:51284 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51296 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:51284 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51296 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51284 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:51296 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:51296 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51326 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:51330 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:51320 - "POST /api/v1/users/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51320 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:51308 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51320 - "OPTIONS /api/v1/users/31a973e1-da2b-4348-a6be-d3eae31a388c/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51308 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:51308 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51308 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51308 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:51308 - "GET /api/v1/users/31a973e1-da2b-4348-a6be-d3eae31a388c/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51308 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:51308 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60784 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:60788 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60784 - "OPTIONS /api/v1/users/31a973e1-da2b-4348-a6be-d3eae31a388c/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=31a973e1-da2b-4348-a6be-d3eae31a388c, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 31a973e1-da2b-4348-a6be-d3eae31a388c 找到 7 个标签
-📋 推荐服务使用标签: ['成都', '四川省', '西南地区', '原油', '天然气', '电力', '煤炭']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:60788 - "GET /api/v1/users/31a973e1-da2b-4348-a6be-d3eae31a388c/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54386 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:54402 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:60796 - "POST /api/v1/users/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60796 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:60796 - "GET /api/v1/users/31a973e1-da2b-4348-a6be-d3eae31a388c/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60796 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60796 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:60796 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60796 - "GET /api/v1/users/31a973e1-da2b-4348-a6be-d3eae31a388c/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60796 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:60796 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=31a973e1-da2b-4348-a6be-d3eae31a388c, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 31a973e1-da2b-4348-a6be-d3eae31a388c 找到 7 个标签
-📋 推荐服务使用标签: ['成都', '四川省', '西南地区', '原油', '天然气', '电力', '煤炭']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:35798 - "GET /api/v1/users/31a973e1-da2b-4348-a6be-d3eae31a388c/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35810 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=31a973e1-da2b-4348-a6be-d3eae31a388c, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 31a973e1-da2b-4348-a6be-d3eae31a388c 找到 7 个标签
-📋 推荐服务使用标签: ['成都', '四川省', '西南地区', '原油', '天然气', '电力', '煤炭']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:60796 - "GET /api/v1/users/31a973e1-da2b-4348-a6be-d3eae31a388c/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:35810 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51778 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:51786 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57008 - "GET /api/v1/users/demo-users/user002/tags HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:35812 - "OPTIONS /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57022 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35812 - "OPTIONS /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57024 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-为用户 user002 创建基础标签（用户不存在）
-✅ 成功为用户 user002 创建了 3 个基础标签
-INFO:     127.0.0.1:57034 - "GET /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57050 - "GET /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57060 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57066 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57080 - "GET /api/v1/users/demo-users/user003/tags HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57334 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57340 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57342 - "OPTIONS /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57344 - "OPTIONS /api/v1/users/user003/tags HTTP/1.1" 200 OK
-为用户 user003 创建基础标签（用户不存在）
-✅ 成功为用户 user003 创建了 3 个基础标签
-INFO:     127.0.0.1:57342 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57344 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57342 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:57344 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57344 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:57342 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57344 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57342 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:57344 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57342 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:57342 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57344 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57344 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57370 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57342 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57380 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57396 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57406 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:39966 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39968 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57352 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57354 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39984 - "OPTIONS /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39984 - "PUT /api/v1/users/user003/tags HTTP/1.1" 422 Unprocessable Entity
-INFO:     127.0.0.1:49010 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:49022 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49010 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:49022 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49010 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49022 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:49010 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:49038 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49010 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49022 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49048 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49010 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49022 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49010 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49062 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:49072 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49062 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49072 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:49062 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49072 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49062 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:49072 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49062 - "OPTIONS /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49072 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49072 - "OPTIONS /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user003, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user003 找到 3 个标签
-📋 推荐服务使用标签: ['全国', '天然气', '电力']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:39232 - "GET /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user003, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user003 找到 3 个标签
-📋 推荐服务使用标签: ['全国', '天然气', '电力']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:39232 - "GET /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:39244 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39244 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39272 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39232 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39278 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39244 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:39232 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39252 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:39244 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39260 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:39232 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39252 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:39260 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39252 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39244 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39252 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39280 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39244 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39292 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39244 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:39252 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39260 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:39244 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39252 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39244 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:39252 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:39252 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51730 - "PUT /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58566 - "OPTIONS /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58576 - "OPTIONS /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58566 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:58576 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58566 - "OPTIONS /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58566 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58566 - "OPTIONS /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 1 个标签
-📋 推荐服务使用标签: ['天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:58576 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36958 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36964 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36976 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36976 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36976 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:36976 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36976 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:36976 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36976 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36990 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 1 个标签
-📋 推荐服务使用标签: ['天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:36990 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 1 个标签
-📋 推荐服务使用标签: ['天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:36990 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51810 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37002 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51816 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37012 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37002 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:37012 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37002 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:37012 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37002 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37012 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:37002 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37012 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:37002 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37012 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51852 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:51856 - "GET /api/v1/users/demo-users HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:40778 - "GET /api/v1/users/demo-users/user002/tags HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:40782 - "GET /api/v1/users/demo-users/user003/tags HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:42650 - "GET /api/v1/users/demo-users/user004/tags HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:42652 - "GET /api/v1/users/demo-users/user005/tags HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:42666 - "GET /api/v1/users/demo-users/user001/tags HTTP/1.1" 404 Not Found
-WARNING:  StatReload detected changes in 'app/models/user.py'. Reloading...
+INFO:     127.0.0.1:58364 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58378 - "OPTIONS /api/v1/users/login HTTP/1.1" 200 OK
+INFO:app.api.users:🔐 用户登录尝试 - email: zhang@newenergy.com
+INFO:app.api.users:🔍 验证用户凭证...
+WARNING:passlib.handlers.bcrypt:(trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/opt/homebrew/lib/python3.13/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+INFO:app.api.users:✅ 用户验证成功 - user_id: 44229cfe-3da5-4702-b0a2-18b2d103f310, username: 张先生
+INFO:app.api.users:🎫 访问令牌创建成功 - 有效期: 30分钟
+INFO:     127.0.0.1:58378 - "POST /api/v1/users/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58378 - "OPTIONS /api/v1/content/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58380 - "OPTIONS /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58386 - "OPTIONS /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58388 - "OPTIONS /api/v1/content/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58390 - "OPTIONS /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58391 - "OPTIONS /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58378 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58378 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58378 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58378 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58380 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58391 - "OPTIONS /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58380 - "OPTIONS /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58390 - "OPTIONS /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58388 - "OPTIONS /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:app.api.content:📋 内容列表API调用 - page=1, page_size=10, content_type=None, tag_filters=None, sort_by=latest, search_keyword=None
+INFO:app.api.content:📄 分页计算 - skip=0, limit=10
+INFO:app.api.content:📚 列表模式 - sort_by=latest
+INFO:     127.0.0.1:58378 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
+INFO:app.api.content:✅ 获取内容成功 - 返回10条内容
+INFO:app.api.content:📄 内容1: 世界燃气大会首次落地中国 各方代表共商绿色发展合作未来... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📄 内容2: 国家能源局副局长万劲松：天然气产业链各环节发展取得历史性成就... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📄 内容3: 欧盟拟立法全面禁止进口俄气... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📊 总数统计 - total_count=45
+INFO:app.api.content:🎯 API调用完成 - 返回响应: items=10, total=45, has_next=True
+INFO:     127.0.0.1:58391 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:app.api.content:📋 内容列表API调用 - page=1, page_size=10, content_type=None, tag_filters=None, sort_by=latest, search_keyword=None
+INFO:app.api.content:📄 分页计算 - skip=0, limit=10
+INFO:app.api.content:📚 列表模式 - sort_by=latest
+INFO:app.api.content:✅ 获取内容成功 - 返回10条内容
+INFO:app.api.content:📄 内容1: 世界燃气大会首次落地中国 各方代表共商绿色发展合作未来... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📄 内容2: 国家能源局副局长万劲松：天然气产业链各环节发展取得历史性成就... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📄 内容3: 欧盟拟立法全面禁止进口俄气... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📊 总数统计 - total_count=45
+INFO:app.api.content:🎯 API调用完成 - 返回响应: items=10, total=45, has_next=True
+INFO:     127.0.0.1:58378 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:app.api.content:📋 内容列表API调用 - page=1, page_size=10, content_type=None, tag_filters=None, sort_by=latest, search_keyword=None
+INFO:app.api.content:📄 分页计算 - skip=0, limit=10
+INFO:app.api.content:📚 列表模式 - sort_by=latest
+INFO:app.api.content:✅ 获取内容成功 - 返回10条内容
+INFO:app.api.content:📄 内容1: 世界燃气大会首次落地中国 各方代表共商绿色发展合作未来... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📄 内容2: 国家能源局副局长万劲松：天然气产业链各环节发展取得历史性成就... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📄 内容3: 欧盟拟立法全面禁止进口俄气... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📊 总数统计 - total_count=45
+INFO:app.api.content:🎯 API调用完成 - 返回响应: items=10, total=45, has_next=True
+INFO:     127.0.0.1:58391 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:app.api.content:📋 内容列表API调用 - page=1, page_size=10, content_type=None, tag_filters=None, sort_by=latest, search_keyword=None
+INFO:app.api.content:📄 分页计算 - skip=0, limit=10
+INFO:app.api.content:📚 列表模式 - sort_by=latest
+INFO:app.api.content:✅ 获取内容成功 - 返回10条内容
+INFO:app.api.content:📄 内容1: 世界燃气大会首次落地中国 各方代表共商绿色发展合作未来... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📄 内容2: 国家能源局副局长万劲松：天然气产业链各环节发展取得历史性成就... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📄 内容3: 欧盟拟立法全面禁止进口俄气... (类型: ContentType.NEWS)
+INFO:app.api.content:   basic_info_tags: ['行业资讯']
+INFO:app.api.content:   region_tags: ['中国', '国际']
+INFO:app.api.content:📊 总数统计 - total_count=45
+INFO:app.api.content:🎯 API调用完成 - 返回响应: items=10, total=45, has_next=True
+INFO:     127.0.0.1:58378 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58419 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58419 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58427 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58427 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58427 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58427 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58430 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58431 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58427 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58427 - "GET / HTTP/1.1" 200 OK
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [1845064]
-INFO:     Started server process [1854023]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-Successfully connected to MongoDB
-INFO:     127.0.0.1:40482 - "PUT /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 创建基础标签（用户不存在）
-✅ 成功为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 创建了 3 个基础标签
-INFO:     127.0.0.1:33276 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-为用户 user001 创建基础标签（用户不存在）
-✅ 成功为用户 user001 创建了 3 个基础标签
-INFO:     127.0.0.1:56638 - "GET /api/v1/users/user001/tags HTTP/1.1" 200 OK
-WARNING:  StatReload detected changes in 'app/services/user_service.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [1854023]
-INFO:     Started server process [1857261]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  StatReload detected changes in 'app/api/users.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [1857261]
-INFO:     Started server process [1858616]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-Successfully connected to MongoDB
-INFO:     127.0.0.1:43954 - "PUT /api/v1/users/user001/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44532 - "PUT /api/v1/users/user001/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:33758 - "GET /api/v1/users/demo-users HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user001, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user001 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:55436 - "GET /api/v1/users/user001/recommendations?limit=3 HTTP/1.1" 200 OK
-WARNING:  StatReload detected changes in 'app/api/users.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [1858616]
-INFO:     Started server process [1860343]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-Successfully connected to MongoDB
-INFO:     127.0.0.1:39206 - "GET /api/v1/users/demo-users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39222 - "GET /api/v1/users/demo-users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39228 - "GET /api/v1/users/demo-users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38654 - "GET /api/v1/users/demo-users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38656 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38658 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38662 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38662 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38662 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38662 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38662 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38662 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38662 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38662 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38674 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38662 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user003, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user003 找到 6 个标签
-📋 推荐服务使用标签: ['深圳', '广东省', '华南地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:38674 - "GET /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38662 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user003, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user003 找到 6 个标签
-📋 推荐服务使用标签: ['深圳', '广东省', '华南地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:38674 - "GET /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=7f33dfed-a08b-48ad-99b0-2c080e3d1ac3, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 7f33dfed-a08b-48ad-99b0-2c080e3d1ac3 找到 3 个标签
-📋 推荐服务使用标签: ['全国', '天然气', '电力']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:38662 - "GET /api/v1/users/7f33dfed-a08b-48ad-99b0-2c080e3d1ac3/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38692 - "GET /api/v1/users/demo-users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38698 - "GET /api/v1/users/demo-users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38700 - "GET /api/v1/users/demo-users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38676 - "OPTIONS /api/v1/users/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38676 - "POST /api/v1/users/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38676 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38676 - "OPTIONS /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "OPTIONS /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38686 - "OPTIONS /api/v1/users/c508ee8a-30c3-4a7f-a2f3-340090e98825/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "GET /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38686 - "GET /api/v1/users/c508ee8a-30c3-4a7f-a2f3-340090e98825/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38378 - "OPTIONS /api/v1/users/user002/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38372 - "GET /api/v1/users/user002/tags HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user002, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user002 找到 7 个标签
-📋 推荐服务使用标签: ['北京', '北京市', '华北地区', '原油', '天然气', '液化天然气(LNG)', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:38378 - "GET /api/v1/users/user002/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38380 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user002, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user002 找到 7 个标签
-📋 推荐服务使用标签: ['北京', '北京市', '华北地区', '原油', '天然气', '液化天然气(LNG)', '煤炭']
-INFO:     127.0.0.1:38380 - "OPTIONS /api/v1/users/c508ee8a-30c3-4a7f-a2f3-340090e98825/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:38372 - "GET /api/v1/users/user002/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=c508ee8a-30c3-4a7f-a2f3-340090e98825, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 c508ee8a-30c3-4a7f-a2f3-340090e98825 找到 7 个标签
-📋 推荐服务使用标签: ['北京', '北京市', '华北地区', '原油', '天然气', '液化天然气(LNG)', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:38686 - "GET /api/v1/users/c508ee8a-30c3-4a7f-a2f3-340090e98825/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38378 - "OPTIONS /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "OPTIONS /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38372 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38378 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38372 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38378 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38686 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:38372 - "GET /api/v1/content/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38378 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38686 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38372 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38410 - "GET /api/v1/users/demo-users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38418 - "GET /api/v1/users/demo-users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48364 - "GET /api/v1/users/demo-users/user004/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48376 - "GET /api/v1/users/demo-users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48392 - "GET /api/v1/users/demo-users/user001/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48402 - "GET /api/v1/users/demo-users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40316 - "GET /api/v1/users/demo-users/user004/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47984 - "POST /api/v1/users/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47984 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:47984 - "OPTIONS /api/v1/users/e092d7e9-aa2b-4dbb-afed-b1e46747aefd/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47990 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48014 - "GET /api/v1/users/e092d7e9-aa2b-4dbb-afed-b1e46747aefd/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48014 - "OPTIONS /api/v1/users/e092d7e9-aa2b-4dbb-afed-b1e46747aefd/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=e092d7e9-aa2b-4dbb-afed-b1e46747aefd, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 e092d7e9-aa2b-4dbb-afed-b1e46747aefd 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:47990 - "GET /api/v1/users/e092d7e9-aa2b-4dbb-afed-b1e46747aefd/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47990 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:48002 - "GET /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47990 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user002, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user002 找到 7 个标签
-📋 推荐服务使用标签: ['北京', '北京市', '华北地区', '原油', '天然气', '液化天然气(LNG)', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:47990 - "GET /api/v1/users/user002/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48002 - "OPTIONS /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47990 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:48002 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47990 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48002 - "OPTIONS /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user003, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user003 找到 6 个标签
-📋 推荐服务使用标签: ['深圳', '广东省', '华南地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:47990 - "GET /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47990 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:47990 - "OPTIONS /api/v1/users/user004/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59070 - "GET /api/v1/users/user004/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59070 - "OPTIONS /api/v1/users/user004/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user004, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user004 找到 6 个标签
-📋 推荐服务使用标签: ['广州', '广东省', '华南地区', '电力', '煤炭', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user004/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59078 - "OPTIONS /api/v1/users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59078 - "GET /api/v1/users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59078 - "OPTIONS /api/v1/users/user005/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user005, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user005 找到 7 个标签
-📋 推荐服务使用标签: ['成都', '四川省', '西南地区', '原油', '天然气', '电力', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user005/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user004/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user004, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user004 找到 6 个标签
-📋 推荐服务使用标签: ['广州', '广东省', '华南地区', '电力', '煤炭', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user004/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59082 - "OPTIONS /api/v1/users/user001/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user001/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59082 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59082 - "OPTIONS /api/v1/users/user001/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user001, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user001 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user001/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user004/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user004, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user004 找到 6 个标签
-📋 推荐服务使用标签: ['广州', '广东省', '华南地区', '电力', '煤炭', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user004/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user003, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user003 找到 6 个标签
-📋 推荐服务使用标签: ['深圳', '广东省', '华南地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user005, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user005 找到 7 个标签
-📋 推荐服务使用标签: ['成都', '四川省', '西南地区', '原油', '天然气', '电力', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user005/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user002/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user002, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user002 找到 7 个标签
-📋 推荐服务使用标签: ['北京', '北京市', '华北地区', '原油', '天然气', '液化天然气(LNG)', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user002/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user001/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user001, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user001 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user001/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user003/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user003, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user003 找到 6 个标签
-📋 推荐服务使用标签: ['深圳', '广东省', '华南地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user003/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59056 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user004/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user004, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user004 找到 6 个标签
-📋 推荐服务使用标签: ['广州', '广东省', '华南地区', '电力', '煤炭', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user004/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59056 - "GET /api/v1/users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59088 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user005, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user005 找到 7 个标签
-📋 推荐服务使用标签: ['成都', '四川省', '西南地区', '原油', '天然气', '电力', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59088 - "GET /api/v1/users/user005/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53076 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53082 - "GET /api/v1/users/cities-details HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53084 - "GET /api/v1/users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53084 - "GET /api/v1/users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53092 - "OPTIONS /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53092 - "GET /api/v1/users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53092 - "OPTIONS /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53092 - "OPTIONS /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59806 - "GET /api/v1/users/user005/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59820 - "GET /api/v1/users/e092d7e9-aa2b-4dbb-afed-b1e46747aefd/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59822 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59806 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59822 - "OPTIONS /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59820 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59806 - "OPTIONS /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59820 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59820 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user005, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user005 找到 7 个标签
-📋 推荐服务使用标签: ['成都', '四川省', '西南地区', '原油', '天然气', '电力', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59820 - "GET /api/v1/users/user005/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59820 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=e092d7e9-aa2b-4dbb-afed-b1e46747aefd, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 e092d7e9-aa2b-4dbb-afed-b1e46747aefd 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59820 - "GET /api/v1/users/e092d7e9-aa2b-4dbb-afed-b1e46747aefd/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user005, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user005 找到 7 个标签
-📋 推荐服务使用标签: ['成都', '四川省', '西南地区', '原油', '天然气', '电力', '煤炭']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59824 - "GET /api/v1/users/user005/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-WARNING:  Invalid HTTP request received.
-INFO:     206.168.34.208:36078 - "GET / HTTP/1.1" 200 OK
-INFO:     206.168.34.208:59058 - "GET / HTTP/1.1" 200 OK
-INFO:     206.168.34.208:59082 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-INFO:     206.168.34.208:59134 - "PRI %2A HTTP/2.0" 404 Not Found
-WARNING:  Invalid HTTP request received.
-INFO:     206.168.34.208:53832 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59010 - "GET /api/v1/users/e092d7e9-aa2b-4dbb-afed-b1e46747aefd/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59012 - "GET /api/v1/content?page=1&page_size=10&sort_by=latest HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:59012 - "GET /api/v1/content/?page=1&page_size=10&sort_by=latest HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=e092d7e9-aa2b-4dbb-afed-b1e46747aefd, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 e092d7e9-aa2b-4dbb-afed-b1e46747aefd 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:59012 - "GET /api/v1/users/e092d7e9-aa2b-4dbb-afed-b1e46747aefd/recommendations?page=1&page_size=10 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36328 - "GET /api/v1/users/user001/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36342 - "GET /api/v1/users/user002/tags HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user001, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user001 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 0 条匹配内容
-✅ 成功获取 0 条推荐内容
-✅ 推荐API调用成功: 返回 0 条内容
-INFO:     127.0.0.1:35578 - "GET /api/v1/users/user001/recommendations?limit=3 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40240 - "GET /api/v1/content?limit=2 HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:44980 - "GET /api/v1/content?limit=2 HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:44984 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60584 - "GET /api/v1/content/ HTTP/1.1" 200 OK
-WARNING:  StatReload detected changes in 'scripts/add_content_tags.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [1860343]
-INFO:     Started server process [1891108]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-Successfully connected to MongoDB
-🔍 推荐API调用开始: user_id=user001, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user001 找到 6 个标签
-📋 推荐服务使用标签: ['上海', '上海市', '华东地区', '电力', '生物柴油', '天然气']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:52536 - "GET /api/v1/users/user001/recommendations?limit=5 HTTP/1.1" 200 OK
-🔍 推荐API调用开始: user_id=user002, page=1, page_size=10
-📊 创建推荐服务实例...
-📄 分页参数: skip=0, limit=10
-🎯 获取推荐内容...
-🎯 推荐服务为用户 user002 找到 7 个标签
-📋 推荐服务使用标签: ['北京', '北京市', '华北地区', '原油', '天然气', '液化天然气(LNG)', '煤炭']
-📊 根据标签找到 10 条匹配内容
-✅ 成功获取 10 条推荐内容
-✅ 推荐API调用成功: 返回 10 条内容
-INFO:     127.0.0.1:46344 - "GET /api/v1/users/user002/recommendations?limit=5 HTTP/1.1" 200 OK
+INFO:     Finished server process [32606]

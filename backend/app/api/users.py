@@ -10,6 +10,11 @@ from datetime import timedelta
 from app.core.config import settings
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -177,112 +182,143 @@ async def get_user_region_info(
         )
 
 @router.post("/login")
-async def login_user(
-    login: UserLogin,
-    db = Depends(get_database)
-):
+async def login(user_login: UserLogin, db=Depends(get_database)):
     """用户登录"""
+    logger.info(f"🔐 用户登录尝试 - email: {user_login.email}")
+    
     try:
         user_service = UserService(db)
-        user = await user_service.authenticate_user(login.email, login.password)
+        
+        # 验证用户凭证
+        logger.info(f"🔍 验证用户凭证...")
+        user = await user_service.authenticate_user(user_login.email, user_login.password)
         
         if not user:
+            logger.warning(f"❌ 登录失败 - 用户名或密码错误: {user_login.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"},
+                detail="Invalid credentials"
             )
-            
+        
+        logger.info(f"✅ 用户验证成功 - user_id: {user.id}, username: {user.username}")
+        
         # 创建访问令牌
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"sub": user.id}, expires_delta=access_token_expires
+            data={"sub": user.email, "user_id": user.id}, 
+            expires_delta=access_token_expires
         )
         
-        # 获取用户可访问功能
-        access_features = await user_service.get_access_features(user.role)
+        logger.info(f"🎫 访问令牌创建成功 - 有效期: {settings.ACCESS_TOKEN_EXPIRE_MINUTES}分钟")
         
         return {
             "access_token": access_token,
             "token_type": "bearer",
-            "user": {
+            "user_info": {
                 "id": user.id,
-                "email": user.email,
                 "username": user.username,
+                "email": user.email,
                 "role": user.role,
-                "is_active": user.is_active,
-                "has_initial_tags": True,
-                "access_features": access_features,
                 "register_city": user.register_city
             }
         }
+        
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
+        logger.error(f"❌ 登录过程错误: {str(e)}")
+        import traceback
+        logger.error(f"错误堆栈: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Login failed: {str(e)}"
+        )
 
 @router.get("/{user_id}/tags", response_model=UserTagsResponse)
-async def get_user_tags(
-    user_id: str,
-    db=Depends(get_database)
-):
-    """获取用户标签（自动初始化如果不存在）"""
+async def get_user_tags(user_id: str, db=Depends(get_database)):
+    """获取用户标签"""
+    logger.info(f"🏷️ 获取用户标签 - user_id: {user_id}")
+    
     try:
         user_service = UserService(db)
         
-        # 尝试获取用户标签
+        logger.info(f"🔍 查询用户标签...")
         user_tags = await user_service.get_user_tags(user_id)
         
-        # 如果没有标签，尝试确保用户有标签
-        if not user_tags or not user_tags.tags:
-            try:
-                user_tags = await user_service.ensure_user_has_tags(user_id)
-                message = "User tags initialized and retrieved successfully"
-            except Exception as init_error:
-                print(f"无法为用户 {user_id} 初始化标签: {init_error}")
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="User tags not found and could not be initialized"
-                )
-        else:
-            message = "User tags retrieved successfully"
+        if not user_tags:
+            logger.warning(f"⚠️ 用户标签不存在，创建默认标签 - user_id: {user_id}")
+            # 用户标签不存在，返回空标签
+            user_tags = UserTags(user_id=user_id, tags=[])
+        
+        logger.info(f"✅ 用户标签获取成功 - 标签数量: {len(user_tags.tags)}")
+        
+        # 按标签类别统计
+        tag_stats = {}
+        for tag in user_tags.tags:
+            category = tag.category
+            if category not in tag_stats:
+                tag_stats[category] = 0
+            tag_stats[category] += 1
+        
+        logger.info(f"📊 标签统计: {tag_stats}")
+        
+        # 打印部分标签详情
+        for i, tag in enumerate(user_tags.tags[:10]):  # 只打印前10个
+            logger.info(f"🏷️ 标签{i+1}: {tag.category}:{tag.name} (权重:{tag.weight}, 来源:{tag.source})")
         
         return UserTagsResponse(
             data=user_tags,
-            message=message
+            message="User tags retrieved successfully"
         )
-    except HTTPException:
-        raise
+        
     except Exception as e:
+        logger.error(f"❌ 获取用户标签错误: {str(e)}")
+        logger.error(f"错误类型: {type(e).__name__}")
+        import traceback
+        logger.error(f"错误堆栈: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail=f"Failed to get user tags: {str(e)}"
         )
 
 @router.put("/{user_id}/tags", response_model=UserTagsResponse)
-async def update_user_tags(
-    user_id: str,
-    request: TagUpdateRequest,
-    db=Depends(get_database)
-):
+async def update_user_tags(user_id: str, tag_request: TagUpdateRequest, db=Depends(get_database)):
     """更新用户标签"""
+    logger.info(f"📝 更新用户标签 - user_id: {user_id}, 新标签数量: {len(tag_request.tags)}")
+    
     try:
         user_service = UserService(db)
-        updated_tags = await user_service.update_user_tags(user_id, request.tags)
+        
+        # 打印新标签详情
+        for i, tag in enumerate(tag_request.tags[:5]):  # 只打印前5个
+            logger.info(f"🆕 新标签{i+1}: {tag.category}:{tag.name} (权重:{tag.weight})")
+        
+        logger.info(f"💾 保存用户标签...")
+        updated_tags = await user_service.update_user_tags(user_id, tag_request.tags)
+        
+        if not updated_tags:
+            logger.error(f"❌ 更新用户标签失败 - user_id: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found or failed to update tags"
+            )
+        
+        logger.info(f"✅ 用户标签更新成功 - 最终标签数量: {len(updated_tags.tags)}")
         
         return UserTagsResponse(
             data=updated_tags,
             message="User tags updated successfully"
         )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"❌ 更新用户标签错误: {str(e)}")
+        import traceback
+        logger.error(f"错误堆栈: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail=f"Failed to update user tags: {str(e)}"
         )
 
 @router.get("/{user_id}/recommendations", response_model=ContentListResponse)
@@ -496,9 +532,8 @@ async def get_demo_user_tags(
             )
         
         return UserTagsResponse(
-            success=True,
             data=user_tags,
-            message="Demo user tags retrieved successfully"
+            message="User tags retrieved successfully"
         )
     except HTTPException:
         raise
