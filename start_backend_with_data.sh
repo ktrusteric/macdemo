@@ -138,11 +138,11 @@ print(count)
         
         # 导入整合的v1+v2数据
         cd scripts
-        log_info "使用整合导入脚本: integrated_import_v2.py"
-        log_info "数据来源: v1版本(45篇) + v2版本(6篇) = 总计51篇"
+        log_info "使用v3版本导入脚本: integrated_import_v3.py"
+        log_info "数据来源: 统一v3版本 (45篇文章，简化维护)"
         
         # 执行数据导入
-        python3 integrated_import_v2.py || error_exit "数据导入失败"
+        python3 integrated_import_v3.py || error_exit "数据导入失败"
         
         log_success "整合数据导入完成"
         cd ..

@@ -158,10 +158,10 @@ except Exception as e:
 "
     
     # 重新导入数据
-    log_info "重新导入整合数据..."
-    log_info "数据来源: v1版本(45篇) + v2版本(6篇) = 总计51篇"
+    log_info "重新导入v3版本数据..."
+    log_info "数据来源: 统一v3版本 (45篇文章，简化维护)"
     cd scripts
-    python3 integrated_import_v2.py
+    python3 integrated_import_v3.py
     
     if [ $? -eq 0 ]; then
         log_success "整合数据导入完成"

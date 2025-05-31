@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="dashboard-container">
     <!-- 页面头部 -->
     <div class="header-section">
       <h1 class="page-title">
@@ -33,25 +33,25 @@
     <!-- 统计概览 -->
     <el-row :gutter="20" class="stats-section" v-if="!loading">
       <el-col :span="6">
-        <el-card class="stat-card total-stat">
+        <el-card class="stat-card">
           <el-statistic title="标签总数" :value="totalTagsCount" />
           <div class="stat-icon">🏷️</div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card categories-stat">
+        <el-card class="stat-card">
           <el-statistic title="启用分类" :value="activeCategoriesCount" />
           <div class="stat-icon">📂</div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card weight-stat">
+        <el-card class="stat-card">
           <el-statistic title="总权重" :value="totalWeight" :precision="1" />
           <div class="stat-icon">⚖️</div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card sync-stat">
+        <el-card class="stat-card">
           <el-statistic title="最后更新" :value="lastUpdateTime" />
           <div class="stat-icon">🔄</div>
         </el-card>
@@ -61,7 +61,50 @@
     <!-- 标签预览 -->
     <el-card class="preview-card" v-if="tags.length">
       <template #header>
-        <span class="preview-title">我的标签</span>
+        <div class="preview-header">
+          <span class="preview-title">我的标签</span>
+          <div class="action-buttons">
+            <el-tooltip content="从服务器重新加载您的标签数据" placement="top">
+              <el-button 
+                type="primary" 
+                @click="fetchTags" 
+                :loading="loading"
+                icon="Refresh"
+              >
+                刷新标签
+              </el-button>
+            </el-tooltip>
+            <el-tooltip content="将当前修改保存到服务器" placement="top">
+              <el-button 
+                type="success" 
+                @click="saveUserTags" 
+                :loading="saving"
+                icon="Check"
+                :disabled="!hasChanges"
+              >
+                保存更改
+              </el-button>
+            </el-tooltip>
+            <el-tooltip content="保留注册地、省份、区域和能源产品标签，清理其他标签" placement="top">
+              <el-button 
+                type="warning"
+                @click="resetToDefaults"
+                icon="RefreshLeft"
+              >
+                重置基础
+              </el-button>
+            </el-tooltip>
+            <el-tooltip content="移除重复的标签，保持数据整洁" placement="top">
+              <el-button 
+                type="info"
+                @click="cleanDuplicates"
+                icon="Delete"
+              >
+                清理重复
+              </el-button>
+            </el-tooltip>
+          </div>
+        </div>
       </template>
       <div class="preview-content">
         <div class="all-tags-cloud">
@@ -75,54 +118,6 @@
           >
             {{ tag.name }}
           </el-tag>
-        </div>
-      </div>
-    </el-card>
-
-    <!-- 快捷操作 -->
-    <el-card class="action-card">
-      <div class="action-header">
-        <span class="action-title">快捷操作</span>
-        <div class="action-buttons">
-          <el-tooltip content="从服务器重新加载您的标签数据" placement="top">
-            <el-button 
-              type="primary" 
-              @click="fetchTags" 
-              :loading="loading"
-              icon="Refresh"
-            >
-              刷新标签
-            </el-button>
-          </el-tooltip>
-          <el-tooltip content="将当前修改保存到服务器" placement="top">
-            <el-button 
-              type="success" 
-              @click="saveUserTags" 
-              :loading="saving"
-              icon="Check"
-              :disabled="!hasChanges"
-            >
-              保存更改
-            </el-button>
-          </el-tooltip>
-          <el-tooltip content="保留注册地、省份、区域和能源产品标签，清理其他标签" placement="top">
-            <el-button 
-              type="warning"
-              @click="resetToDefaults"
-              icon="RefreshLeft"
-            >
-              重置基础
-            </el-button>
-          </el-tooltip>
-          <el-tooltip content="移除重复的标签，保持数据整洁" placement="top">
-            <el-button 
-              type="info"
-              @click="cleanDuplicates"
-              icon="Delete"
-            >
-              清理重复
-            </el-button>
-          </el-tooltip>
         </div>
       </div>
     </el-card>
@@ -335,6 +330,9 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
+
+    <!-- 页面宽度占位符 - 不可见但确保页面宽度一致 -->
+    <div class="width-placeholder" aria-hidden="true"></div>
   </div>
 </template>
 
@@ -398,7 +396,7 @@ const tagCategories = ref([
     name: '⚡ 能源品种',
     description: '能源类型和细分品种标签',
     color: 'warning',
-    presetTags: ['原油', '管道天然气(PNG)', '天然气', '液化天然气(LNG)', '液化石油气(LPG)', '汽油', '柴油', '沥青', '石油焦', '生物柴油', '电力', '煤炭', '核能', '可再生能源', '生物质能', '氢能']
+    presetTags: ['原油', '管道天然气(PNG)', '天然气', '液化天然气(LNG)', '液化石油气(LPG)', '汽油', '柴油', '沥青', '石油焦', '生物柴油', '电力', '煤炭', '重烃', '核能', '可再生能源', '生物质能', '氢能']
   },
   {
     key: 'business_field',
@@ -873,12 +871,10 @@ const cancelEditWeight = (tag: UserTag) => {
 </script>
 
 <style scoped>
-.page-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-  background: #f5f7fa;
+.dashboard-container {
   min-height: 100vh;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .header-section {
@@ -891,7 +887,7 @@ const cancelEditWeight = (tag: UserTag) => {
 }
 
 .page-title {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: bold;
   color: #1769aa;
   margin-bottom: 12px;
@@ -902,7 +898,7 @@ const cancelEditWeight = (tag: UserTag) => {
 }
 
 .title-icon {
-  font-size: 40px;
+  font-size: 36px;
   color: #1890ff;
 }
 
@@ -930,31 +926,13 @@ const cancelEditWeight = (tag: UserTag) => {
   overflow: hidden;
   transition: all 0.3s;
   cursor: pointer;
+  background: white;
+  border: 1px solid #ebeef5;
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.stat-card.total-stat {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.stat-card.categories-stat {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-}
-
-.stat-card.weight-stat {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
-}
-
-.stat-card.sync-stat {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  color: white;
 }
 
 .stat-icon {
@@ -964,29 +942,63 @@ const cancelEditWeight = (tag: UserTag) => {
   transform: translateY(-50%);
   font-size: 32px;
   opacity: 0.3;
+  color: #909399;
 }
 
-.action-card {
-  margin-bottom: 24px;
+.preview-card {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 
-.action-header {
+.preview-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.action-title {
+.preview-title {
   font-size: 18px;
   font-weight: bold;
   color: #303133;
+  text-align: left;
 }
 
 .action-buttons {
   display: flex;
   gap: 12px;
+}
+
+.preview-content {
+  padding: 20px;
+}
+
+.all-tags-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.preview-tag {
+  margin: 0;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  line-height: 32px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+:deep(.el-statistic__head) {
+  color: #606266;
+  margin-bottom: 8px;
+}
+
+:deep(.el-statistic__content) {
+  color: #303133;
+  font-weight: bold;
 }
 
 .tags-card {
@@ -1005,10 +1017,12 @@ const cancelEditWeight = (tag: UserTag) => {
   font-size: 18px;
   font-weight: bold;
   color: #303133;
+  text-align: left;
 }
 
 .tags-tabs {
   border: none;
+  min-height: 500px;
 }
 
 .tab-label {
@@ -1019,6 +1033,7 @@ const cancelEditWeight = (tag: UserTag) => {
 
 .tab-content {
   padding: 20px;
+  min-height: 400px;
 }
 
 .category-description {
@@ -1080,6 +1095,11 @@ const cancelEditWeight = (tag: UserTag) => {
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.3s;
+  height: 32px;
+  line-height: 32px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
 }
 
 .tag-item:hover {
@@ -1091,6 +1111,7 @@ const cancelEditWeight = (tag: UserTag) => {
   display: flex;
   align-items: center;
   gap: 6px;
+  height: 100%;
 }
 
 .tag-name {
@@ -1127,6 +1148,12 @@ const cancelEditWeight = (tag: UserTag) => {
   border: 2px dashed #d9d9d9;
   background: #fafafa;
   position: relative;
+  height: 32px;
+  line-height: 32px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
 }
 
 .preset-tag-item:hover {
@@ -1170,66 +1197,6 @@ const cancelEditWeight = (tag: UserTag) => {
 
 .weight-input {
   width: 120px;
-}
-
-.preview-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}
-
-.preview-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: #303133;
-}
-
-.preview-content {
-  padding: 20px;
-}
-
-.all-tags-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-}
-
-.preview-tag {
-  margin: 0;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.tag-weight-icon {
-  color: #faad14;
-}
-
-:deep(.el-statistic__head) {
-  color: rgba(255,255,255,0.9);
-  margin-bottom: 8px;
-}
-
-:deep(.el-statistic__content) {
-  color: white;
-  font-weight: bold;
-}
-
-:deep(.el-tabs__header) {
-  margin: 0;
-}
-
-:deep(.el-tabs__nav-wrap::after) {
-  display: none;
-}
-
-:deep(.el-empty) {
-  padding: 40px 0;
-}
-
-:deep(.el-badge__content) {
-  border: none;
 }
 
 .region-selector-section {
@@ -1323,5 +1290,15 @@ const cancelEditWeight = (tag: UserTag) => {
 .weight-editor-actions {
   display: flex;
   gap: 8px;
+}
+
+.width-placeholder {
+  width: 1280px;
+  min-width: 1280px;
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+  position: relative;
+  margin: 0 auto;
 }
 </style> 
