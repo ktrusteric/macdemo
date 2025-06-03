@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import connect_to_mongo, close_mongo_connection
-from app.api import users, content, recommendations, ai_integration, region
+from app.api import users, content, recommendations, ai_integration, region, admin
 
 def create_application() -> FastAPI:
     application = FastAPI(
@@ -47,6 +47,13 @@ def create_application() -> FastAPI:
         tags=["region"]
     )
     
+    # 添加管理员路由
+    application.include_router(
+        admin.router,
+        prefix=f"{settings.API_V1_STR}/admin",
+        tags=["admin"]
+    )
+    
     # 添加用户行为记录路由
     application.include_router(
         users.router,
@@ -73,6 +80,10 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "message": "Energy Info System is running"}
+
+@app.get(f"{settings.API_V1_STR}/health")
+async def api_health_check():
+    return {"status": "healthy", "message": "Energy Info System API is running", "version": settings.VERSION}
 
 if __name__ == "__main__":
     import uvicorn

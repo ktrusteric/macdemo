@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="dashboard-container">
     <!-- 页面标题 -->
     <div class="header-section">
       <h1 class="page-title">
@@ -70,25 +70,25 @@
     <!-- 统计信息 -->
     <el-row :gutter="20" class="stats-row">
       <el-col :span="6">
-        <el-card class="stat-card market-stat" @click="selectCategory('market')">
+        <el-card class="stat-card" @click="selectCategory('market')">
           <el-statistic title="行情咨询" :value="stats.market" />
           <div class="stat-icon">📈</div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card policy-stat" @click="selectCategory('policy')">
+        <el-card class="stat-card" @click="selectCategory('policy')">
           <el-statistic title="政策法规" :value="stats.policy" />
           <div class="stat-icon">📋</div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card announcement-stat" @click="selectCategory('announcement', 'trade')">
+        <el-card class="stat-card" @click="selectCategory('announcement', 'trade')">
           <el-statistic title="交易公告" :value="stats.tradeAnnouncement" />
           <div class="stat-icon">📊</div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card price-stat" @click="selectCategory('announcement', 'price')">
+        <el-card class="stat-card" @click="selectCategory('announcement', 'price')">
           <el-statistic title="调价公告" :value="stats.priceAnnouncement" />
           <div class="stat-icon">💰</div>
         </el-card>
@@ -182,6 +182,9 @@
         </div>
       </div>
     </el-card>
+
+    <!-- 页面宽度占位符 - 不可见但确保页面宽度一致 -->
+    <div class="width-placeholder" aria-hidden="true"></div>
   </div>
 </template>
 
@@ -440,11 +443,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-container {
+.dashboard-container {
+  min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 20px;
-  min-height: 100vh;
 }
 
 .header-section {
@@ -494,31 +496,13 @@ onMounted(() => {
   overflow: hidden;
   transition: all 0.3s;
   cursor: pointer;
+  background: white;
+  border: 1px solid #ebeef5;
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.stat-card.market-stat {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.stat-card.policy-stat {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-}
-
-.stat-card.announcement-stat {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
-}
-
-.stat-card.price-stat {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  color: white;
 }
 
 .stat-icon {
@@ -528,6 +512,7 @@ onMounted(() => {
   transform: translateY(-50%);
   font-size: 32px;
   opacity: 0.3;
+  color: #909399;
 }
 
 .content-card {
@@ -552,13 +537,14 @@ onMounted(() => {
 }
 
 .content-list {
-  min-height: 400px;
+  min-height: 600px;
 }
 
 .content-items {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 500px;
 }
 
 .content-item {
@@ -621,6 +607,7 @@ onMounted(() => {
   margin: 0 0 12px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -660,12 +647,23 @@ onMounted(() => {
 }
 
 :deep(.el-statistic__head) {
-  color: rgba(255,255,255,0.9);
+  color: #606266;
   margin-bottom: 8px;
 }
 
 :deep(.el-statistic__content) {
-  color: white;
+  color: #303133;
   font-weight: bold;
+}
+
+/* 页面宽度占位符 - 不可见但确保页面宽度一致 */
+.width-placeholder {
+  width: 1280px;
+  min-width: 1280px;
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+  position: relative;
+  margin: 0 auto;
 }
 </style> 

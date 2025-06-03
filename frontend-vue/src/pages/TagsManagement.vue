@@ -351,6 +351,7 @@ import {
 import api from '@/api/request'
 import { useUserStore } from '@/store/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import tagService, { type TagCategory } from '@/services/tagService'
 
 interface UserTag {
   category: string;
@@ -375,58 +376,8 @@ const hasChanges = ref(false)
 const tags = ref<UserTag[]>([])
 const originalTags = ref<UserTag[]>([])
 
-// 7大类标签配置 - 与后端完全对应
-const tagCategories = ref([
-  {
-    key: 'basic_info',
-    name: '📄 基础信息',
-    description: '内容类型和基础属性标签',
-    color: 'primary',
-    presetTags: ['政策法规', '行业资讯', '交易公告', '调价公告', '研报分析', '价格变动', '科技创新']
-  },
-  {
-    key: 'region',
-    name: '🗺️ 地域标签',
-    description: '地理区域相关标签（请使用下方的省份城市选择器添加）',
-    color: 'success',
-    presetTags: [] // 清空预设标签，使用选择器
-  },
-  {
-    key: 'energy_type',
-    name: '⚡ 能源品种',
-    description: '能源类型和细分品种标签',
-    color: 'warning',
-    presetTags: ['原油', '管道天然气(PNG)', '天然气', '液化天然气(LNG)', '液化石油气(LPG)', '汽油', '柴油', '沥青', '石油焦', '生物柴油', '电力', '煤炭', '重烃', '核能', '可再生能源', '生物质能', '氢能']
-  },
-  {
-    key: 'business_field',
-    name: '🏢 业务领域',
-    description: '业务类型和关注主题标签',
-    color: 'info',
-    presetTags: ['市场动态', '价格变化', '交易信息', '科技创新', '政策解读', '国际合作', '投资支持', '民营经济发展', '市场准入优化', '公平竞争']
-  },
-  {
-    key: 'beneficiary',
-    name: '👥 受益主体',
-    description: '涉及的主体类型标签',
-    color: 'danger',
-    presetTags: ['能源企业', '政府机构', '交易方', '民营企业', '国有企业', '外资企业', 'LNG交易方', '华东区域用户']
-  },
-  {
-    key: 'policy_measure',
-    name: '📋 政策措施',
-    description: '政策措施和关键举措标签',
-    color: 'success',
-    presetTags: ['市场监管', '技术合作', '竞价规则', '投资支持', '市场准入', '创新投融资', '风险管控', '市场准入措施', '价格调整', '区域价格调整']
-  },
-  {
-    key: 'importance',
-    name: '⭐ 重要性',
-    description: '内容重要程度和影响范围标签',
-    color: 'warning',
-    presetTags: ['国家级', '权威发布', '重要政策', '行业影响', '常规公告', '国际影响']
-  }
-])
+// 标签分类配置 - 从API动态获取，不再硬编码
+const tagCategories = ref<TagCategory[]>([])
 
 // 计算属性
 const totalTagsCount = computed(() => tags.value.length)
@@ -701,9 +652,20 @@ watch(tags, () => {
 }, { deep: true })
 
 // 页面挂载
-onMounted(() => {
-  fetchTags()
-  loadProvincesWithCities()
+onMounted(async () => {
+  try {
+    // 1. 首先初始化标签分类配置
+    await initTagCategories()
+    
+    // 2. 加载省份城市数据
+    await loadProvincesWithCities()
+    
+    // 3. 获取用户标签
+    await fetchTags()
+  } catch (error) {
+    console.error('❌ 页面初始化失败:', error)
+    ElMessage.error('页面初始化失败，请刷新重试')
+  }
 })
 
 // 加载省份城市数据
@@ -718,9 +680,7 @@ const regionSelector = reactive({
 // 加载省份城市数据
 const loadProvincesWithCities = async () => {
   try {
-    const response = await api.get('/users/provinces-with-cities')
-    const data = response.data
-    
+    const data = await tagService.getProvincesWithCities()
     regionProvinces.value = data.provinces
     
     console.log('✅ 省份城市数据加载成功', {
@@ -758,8 +718,8 @@ const handleRegionCityChange = async (cityValue: string) => {
   
   try {
     // 调用后端API获取城市的完整区域信息
-    const response = await api.get(`/users/cities-details`)
-    const citiesDetails = response.data.cities
+    const data = await tagService.getCitiesDetails()
+    const citiesDetails = data.cities
     
     const cityDetail = citiesDetails.find(c => c.city === cityValue)
     if (cityDetail) {
@@ -867,6 +827,18 @@ const cancelEditWeight = (tag: UserTag) => {
   tag.editingWeight = undefined
   hasChanges.value = true
   ElMessage.info(`已取消编辑标签权重：${tag.name}`)
+}
+
+// 初始化标签分类配置
+const initTagCategories = async () => {
+  try {
+    console.log('🏷️ 初始化标签分类配置...')
+    tagCategories.value = await tagService.getTagCategories()
+    console.log('✅ 标签分类配置加载成功:', tagCategories.value.length)
+  } catch (error) {
+    console.error('❌ 加载标签分类配置失败:', error)
+    ElMessage.error('加载标签配置失败，请刷新重试')
+  }
 }
 </script>
 

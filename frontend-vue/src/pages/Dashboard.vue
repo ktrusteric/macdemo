@@ -110,8 +110,8 @@
                       :href="item.link" 
                       target="_blank" 
                       style="color: #409EFF; text-decoration: none; font-weight: bold;"
-                      @mouseover="$event.target.style.color='#66b1ff'"
-                      @mouseout="$event.target.style.color='#409EFF'"
+                      @mouseover="($event.target as HTMLElement).style.color='#66b1ff'"
+                      @mouseout="($event.target as HTMLElement).style.color='#409EFF'"
                     >
                       {{ item.title }}
                     </a>
@@ -217,6 +217,14 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 市场行情快览 -->
+    <el-card v-if="marketData.length" class="market-card">
+      <!-- ... existing code ... -->
+    </el-card>
+
+    <!-- 页面宽度占位符 - 不可见但确保页面宽度一致 -->
+    <div class="width-placeholder" aria-hidden="true"></div>
   </div>
 </template>
 
@@ -432,23 +440,14 @@ const loadRecommendedContent = async () => {
       return
     }
     
-    // 只使用7大类标签中的6类进行推荐（排除city、province）
-    const relevantTags = userTags.filter(tag => 
-      ['basic_info', 'region', 'energy_type', 'business_field', 'beneficiary', 'policy_measure', 'importance'].includes(tag.category)
-    )
+    console.log('🏷️ 用户标签:', userTags)
     
-    console.log('🏷️ 用于推荐的标签:', relevantTags)
-    
-    if (relevantTags.length === 0) {
-      console.log('⚠️ 无有效推荐标签')
-      recommendations.value = []
-      return
-    }
-    
-    // 根据用户标签推荐内容
-    const res = await api.post('/content/recommend', {
-      user_tags: relevantTags.map(tag => `${tag.category}:${tag.name}`),
-      limit: 6
+    // 调用个性化推荐API
+    const res = await api.get(`/users/${userId}/recommendations`, {
+      params: {
+        page: 1,
+        page_size: 10
+      }
     })
     
     console.log('📄 推荐内容响应:', res.data)
@@ -654,7 +653,7 @@ onMounted(() => {
 
 <style scoped>
 .dashboard-container {
-  padding: 20px;
+  min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -713,6 +712,7 @@ onMounted(() => {
 
 .tag-stats {
   padding: 20px;
+  min-height: 200px;
 }
 
 .stat-item {
@@ -1094,5 +1094,24 @@ onMounted(() => {
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid #f0f0f0;
+}
+
+.recommendations {
+  min-height: 400px;
+}
+
+.announcements {
+  min-height: 150px;
+}
+
+/* 页面宽度占位符 - 不可见但确保页面宽度一致 */
+.width-placeholder {
+  width: 1280px;
+  min-width: 1280px;
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+  position: relative;
+  margin: 0 auto;
 }
 </style> 

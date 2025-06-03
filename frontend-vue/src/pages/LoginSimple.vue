@@ -1,23 +1,25 @@
 <template>
-  <div class="login-container">
-    <h1>OpenResty 负载均衡管理平台</h1>
-    <div class="login-form">
-      <h2>用户登录</h2>
-      <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label>邮箱:</label>
-          <input v-model="email" type="email" required />
+  <div class="page-container">
+    <div class="login-container">
+      <h1>OpenResty 负载均衡管理平台</h1>
+      <div class="login-form">
+        <h2>用户登录</h2>
+        <form @submit.prevent="handleLogin">
+          <div class="form-group">
+            <label>邮箱:</label>
+            <input v-model="email" type="email" required />
+          </div>
+          <div class="form-group">
+            <label>密码:</label>
+            <input v-model="password" type="password" required />
+          </div>
+          <button type="submit" class="login-btn">登录</button>
+        </form>
+        <div class="demo-accounts">
+          <h3>测试账号</h3>
+          <p>zhang@newenergy.com / demo123</p>
+          <p>li@traditional.com / demo123</p>
         </div>
-        <div class="form-group">
-          <label>密码:</label>
-          <input v-model="password" type="password" required />
-        </div>
-        <button type="submit" class="login-btn">登录</button>
-      </form>
-      <div class="demo-accounts">
-        <h3>测试账号</h3>
-        <p>zhang@newenergy.com / demo123</p>
-        <p>li@traditional.com / demo123</p>
       </div>
     </div>
   </div>
@@ -42,10 +44,16 @@ const handleLogin = () => {
 </script>
 
 <style scoped>
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .login-container {
   max-width: 400px;
-  margin: 50px auto;
-  padding: 20px;
+  width: 100%;
   text-align: center;
 }
 

@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+上海石油天然气交易中心信息门户系统 - 统一数据导入脚本
+使用完整的51篇文章数据集，确保与TagProcessor的标签一致性
+"""
+
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -10,159 +17,285 @@ from app.core.config import settings
 from app.models.content import Content, ContentType, ContentTag
 from app.models.user import User, UserRole, UserCreate, TagCategory, TagSource
 from app.services.user_service import UserService
+from app.utils.tag_processor import TagProcessor  # 导入统一标签处理器
 from passlib.context import CryptContext
 from typing import List
 import ast
 
-# 内容类型映射
-CONTENT_TYPE_MAP = {
-    "政策法规": ContentType.POLICY,
-    "行业资讯": ContentType.NEWS,
-    "调价公告": ContentType.PRICE,
-    "交易公告": ContentType.ANNOUNCEMENT
-}
+# 使用统一的标签处理器配置
+CONTENT_TYPE_MAP = TagProcessor.CONTENT_TYPE_MAP
 
 # 密码加密上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_content_type(basic_info_tags):
-    """根据基础信息标签确定内容类型"""
+    """根据基础信息标签确定内容类型，使用TagProcessor的标准映射"""
+    if not basic_info_tags:
+        return ContentType.NEWS  # 默认为行业资讯
+    
+    # 检查是否包含标准化的基础信息标签
     for tag in basic_info_tags:
-        if '政策' in tag or '法规' in tag:
+        if tag in ["政策法规"]:
             return ContentType.POLICY
-        elif '调价' in tag or '价格' in tag:
+        elif tag in ["调价公告"]:
             return ContentType.PRICE
-        elif '公告' in tag:
+        elif tag in ["交易公告"]:
             return ContentType.ANNOUNCEMENT
-    return ContentType.NEWS
+        elif tag in ["行业资讯", "研报分析"]:
+            return ContentType.NEWS
+    
+    return ContentType.NEWS  # 默认为行业资讯
+
+def parse_tag_string(tag_str) -> List[str]:
+    """解析标签字符串，支持多种格式"""
+    if not tag_str:
+        return []
+    
+    # 如果已经是列表，直接返回
+    if isinstance(tag_str, list):
+        return [str(tag).strip() for tag in tag_str if tag and str(tag).strip()]
+    
+    # 处理字符串格式的标签
+    tag_str = str(tag_str).strip()
+    if not tag_str or tag_str in ['[]', '[""]', "['']", 'null', 'None']:
+        return []
+    
+    # 尝试解析JSON格式
+    try:
+        parsed = ast.literal_eval(tag_str)
+        if isinstance(parsed, list):
+            return [str(tag).strip() for tag in parsed if tag and str(tag).strip()]
+    except:
+        pass
+    
+    # 简单分割处理
+    if ',' in tag_str:
+        return [tag.strip().strip("'\"") for tag in tag_str.split(',') if tag.strip()]
+    
+    return [tag_str.strip().strip("'\"")]
+
+def normalize_basic_info_tags(tags):
+    """标准化基础信息标签，使用TagProcessor的标准"""
+    if not tags:
+        return ["行业资讯"]  # 默认标签
+    
+    normalized = []
+    for tag in tags:
+        tag = str(tag).strip()
+        # 使用TagProcessor的标准基础信息标签
+        if tag in TagProcessor.STANDARD_BASIC_INFO_TAGS:
+            normalized.append(tag)
+        else:
+            # 映射到标准标签
+            tag_lower = tag.lower()
+            if "政策" in tag or "法规" in tag or "通知" in tag or "规定" in tag:
+                normalized.append("政策法规")
+            elif "价格" in tag or "调价" in tag:
+                normalized.append("调价公告")
+            elif "交易" in tag or "公告" in tag:
+                normalized.append("交易公告")
+            elif "研报" in tag or "分析" in tag:
+                normalized.append("研报分析")
+            else:
+                normalized.append("行业资讯")  # 默认
+    
+    return list(set(normalized))  # 去重
+
+def normalize_energy_type_tags(tags):
+    """标准化能源类型标签，确保符合TagProcessor标准"""
+    if not tags:
+        return []
+    
+    normalized = []
+    standard_energy_types = TagProcessor.STANDARD_ENERGY_TYPES
+    
+    for tag in tags:
+        tag = str(tag).strip()
+        if tag in standard_energy_types:
+            normalized.append(tag)
+        else:
+            # 映射常见的非标准标签
+            tag_lower = tag.lower()
+            if "lng" in tag_lower or "液化天然气" in tag:
+                normalized.append("液化天然气(LNG)")
+            elif "png" in tag_lower or "管道天然气" in tag:
+                normalized.append("管道天然气(PNG)")
+            elif "天然气" in tag and "液化" not in tag and "管道" not in tag:
+                normalized.append("天然气")
+            elif "原油" in tag:
+                normalized.append("原油")
+            elif "电力" in tag:
+                normalized.append("电力")
+            elif "汽油" in tag:
+                normalized.append("汽油")
+            elif "柴油" in tag:
+                normalized.append("柴油")
+            elif "煤炭" in tag:
+                normalized.append("煤炭")
+            # 如果无法映射，保留原标签（但会在后续验证中标记）
+            else:
+                normalized.append(tag)
+    
+    return list(set(normalized))  # 去重
 
 async def import_articles(use_simplified=True):
-    """导入文章数据"""
-    print("📚 导入文章数据...")
-    
-    # 初始化数据库连接
-    client = None
+    """导入文章数据到数据库"""
     try:
-        # 初始化MongoDB客户端
-        client = AsyncIOMotorClient(settings.MONGODB_URL)
-        db = client[settings.DATABASE_NAME]
-        collection = db.content
+        # 使用清理后的统一数据集
+        data_file = "scripts/能源信息服务系统_清理重复字段_51篇.json"
+        print(f"📖 开始导入数据: {data_file}")
         
-        # 清理现有数据
-        await collection.delete_many({})
-        print("Cleared existing content data")
+        with open(data_file, 'r', encoding='utf-8') as f:
+            articles_data = json.load(f)
         
-        # 选择数据文件
-        if use_simplified:
-            json_file_path = os.path.join(os.path.dirname(__file__), "简化测试数据.json")
-            print("🔧 使用简化测试数据（每篇文章3-5个标签，便于测试）")
-        else:
-            json_file_path = os.path.join(os.path.dirname(__file__), "信息发布文章与标签.json")
-            print("📋 使用完整原始数据（每篇文章15+个标签）")
-        
-        # 检查文件是否存在
-        if not os.path.exists(json_file_path):
-            print(f"❌ 数据文件不存在: {json_file_path}")
+        if not articles_data:
+            print("❌ 没有找到文章数据")
             return
         
-        # 读取JSON数据
-        with open(json_file_path, 'r', encoding='utf-8') as f:
-            raw_data = json.load(f)
+        print(f"📊 准备导入 {len(articles_data)} 篇文章")
         
-        articles = []
+        # 初始化数据库连接
+        client = AsyncIOMotorClient("mongodb://localhost:27017")
+        db = client["energy_info"]
+        content_collection = db["content"]
+        
+        # 清空现有数据
+        await content_collection.delete_many({})
+        print("🗑️  已清空现有文章数据")
+        
+        # 统计信息
+        success_count = 0
+        error_count = 0
+        basic_info_counts = {}
         energy_type_counts = {}
         
-        # 提取标签的辅助函数
-        def extract_tags(data, key, fallback_key=None):
-            tags = data.get(key, [])
-            if not tags and fallback_key:
-                tags = data.get(fallback_key, [])
-            
-            # 处理字符串格式的标签（如 "['交易公告']"）
-            if isinstance(tags, str):
-                try:
-                    # 尝试使用ast.literal_eval安全解析
-                    tags = ast.literal_eval(tags)
-                except (ValueError, SyntaxError):
-                    # 如果解析失败，返回空列表
-                    tags = []
-            
-            return tags if isinstance(tags, list) else []
+        # 逐篇导入文章
+        for i, article_data in enumerate(articles_data, 1):
+            try:
+                # 基础字段处理
+                title = article_data.get('标题', f'未知标题_{i}')
+                content = article_data.get('文章内容', '')
+                publish_date = article_data.get('发布日期', '2025-01-01')
+                source = article_data.get('来源机构', '未知来源')
+                link = article_data.get('链接', '')
+                
+                # 🔥 直接使用清理后的basic_info_tags字段
+                basic_info_tags_raw = article_data.get('basic_info_tags', [])
+                
+                # 确保basic_info_tags是数组格式
+                if isinstance(basic_info_tags_raw, str):
+                    basic_info_tags = parse_tag_string(basic_info_tags_raw)
+                elif isinstance(basic_info_tags_raw, list):
+                    basic_info_tags = basic_info_tags_raw
+                else:
+                    basic_info_tags = []
+                
+                # 标准化基础信息标签
+                basic_info_tags = normalize_basic_info_tags(basic_info_tags)
+                
+                # 🔥 基于基础信息标签确定内容类型
+                content_type = get_content_type(basic_info_tags)
+                
+                # 处理其他标签字段
+                energy_type_tags_raw = article_data.get('能源品种标签', [])
+                if isinstance(energy_type_tags_raw, str):
+                    energy_type_tags = parse_tag_string(energy_type_tags_raw)
+                else:
+                    energy_type_tags = energy_type_tags_raw if isinstance(energy_type_tags_raw, list) else []
+                
+                energy_type_tags = normalize_energy_type_tags(energy_type_tags)
+                
+                # 地域标签处理
+                region_tags = []
+                if article_data.get('规范化地域标签'):
+                    region_tags.extend(article_data['规范化地域标签'])
+                
+                # 业务领域标签
+                business_field_tags_raw = article_data.get('业务领域/主题标签', [])
+                business_field_tags = parse_tag_string(business_field_tags_raw) if isinstance(business_field_tags_raw, str) else business_field_tags_raw
+                
+                # 受益主体标签
+                beneficiary_tags_raw = article_data.get('受益主体标签', [])
+                beneficiary_tags = parse_tag_string(beneficiary_tags_raw) if isinstance(beneficiary_tags_raw, str) else beneficiary_tags_raw
+                
+                # 政策措施标签
+                policy_measure_tags_raw = article_data.get('关键措施/政策标签', [])
+                policy_measure_tags = parse_tag_string(policy_measure_tags_raw) if isinstance(policy_measure_tags_raw, str) else policy_measure_tags_raw
+                
+                # 重要性标签
+                importance_tags_raw = article_data.get('重要性/影响力标签', [])
+                importance_tags = parse_tag_string(importance_tags_raw) if isinstance(importance_tags_raw, str) else importance_tags_raw
+                
+                # 创建文章文档
+                article_doc = {
+                    "title": title,
+                    "content": content,
+                    "publish_date": publish_date,
+                    "source": source,
+                    "link": link,
+                    "type": content_type,  # 🔥 基于basic_info_tags生成
+                    "basic_info_tags": basic_info_tags,
+                    "region_tags": region_tags,
+                    "energy_type_tags": energy_type_tags,
+                    "business_field_tags": business_field_tags if isinstance(business_field_tags, list) else [],
+                    "beneficiary_tags": beneficiary_tags if isinstance(beneficiary_tags, list) else [],
+                    "policy_measure_tags": policy_measure_tags if isinstance(policy_measure_tags, list) else [],
+                    "importance_tags": importance_tags if isinstance(importance_tags, list) else [],
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                }
+                
+                # 插入数据库
+                result = await content_collection.insert_one(article_doc)
+                
+                if result.inserted_id:
+                    success_count += 1
+                    
+                    # 统计基础信息标签
+                    for tag in basic_info_tags:
+                        basic_info_counts[tag] = basic_info_counts.get(tag, 0) + 1
+                    
+                    # 统计能源类型标签
+                    for tag in energy_type_tags:
+                        energy_type_counts[tag] = energy_type_counts.get(tag, 0) + 1
+                    
+                    if i <= 5:
+                        print(f"✅ 文章 {i}: {title[:30]}...")
+                else:
+                    error_count += 1
+                    print(f"❌ 文章 {i} 插入失败")
+                    
+            except Exception as e:
+                error_count += 1
+                print(f"❌ 处理文章 {i} 时出错: {str(e)}")
         
-        for article_data in raw_data:
-            # 标准化标签 - 使用正确的中文字段名
-            basic_info_tags = extract_tags(article_data, "基础信息标签")
-            energy_type_tags = extract_tags(article_data, "能源品种标签") 
-            region_tags = extract_tags(article_data, "地域标签")
-            business_field_tags = extract_tags(article_data, "业务领域/主题标签")
-            beneficiary_tags = extract_tags(article_data, "受益主体标签") 
-            policy_measure_tags = extract_tags(article_data, "关键措施/政策标签")
-            importance_tags = extract_tags(article_data, "重要性/影响力标签")
-            
-            # 统计能源类型
-            for energy_type in energy_type_tags:
-                energy_type_counts[energy_type] = energy_type_counts.get(energy_type, 0) + 1
-            
-            # 构建文档
-            article = {
-                'title': article_data.get('标题', ''),
-                'content': article_data.get('文章内容', '') or article_data.get('正文', '') or '暂无内容',
-                'link': article_data.get('链接', ''),
-                'publish_time': article_data.get('发布时间', datetime.now().isoformat()),
-                'type': get_content_type(basic_info_tags),
-                'basic_info_tags': basic_info_tags,
-                'energy_type_tags': energy_type_tags,
-                'region_tags': region_tags,
-                'business_field_tags': business_field_tags,
-                'beneficiary_tags': beneficiary_tags,
-                'policy_measure_tags': policy_measure_tags,
-                'importance_tags': importance_tags,
-                'created_at': datetime.now(),
-                'updated_at': datetime.now()
-            }
-            
-            articles.append(article)
+        # 输出统计信息
+        print(f"\n📊 导入完成统计：")
+        print(f"成功导入: {success_count} 篇")
+        print(f"导入失败: {error_count} 篇")
+        print(f"总计: {len(articles_data)} 篇")
         
-        # 批量插入
-        if articles:
-            await collection.insert_many(articles)
-            print(f"\n✅ 成功导入 {len(articles)} 篇文章")
-            
-            # 统计信息
-            total_articles = len(articles)
-            articles_with_energy_tags = sum(1 for article in articles if article.get("energy_type_tags"))
-            print(f"\n📈 覆盖率统计：")
-            print(f"   有能源类型标签的文章: {articles_with_energy_tags}/{total_articles} ({articles_with_energy_tags/total_articles*100:.1f}%)")
-            
-            if energy_type_counts:
-                print(f"\n💡 能源类型分布：")
-                for energy_type, count in sorted(energy_type_counts.items(), key=lambda x: x[1], reverse=True):
-                    percentage = count / total_articles * 100
-                    print(f"   {energy_type}: {count} 篇 ({percentage:.1f}%)")
-            
-            # 天然气类型细分统计
-            lng_count = energy_type_counts.get('液化天然气(LNG)', 0)
-            png_count = energy_type_counts.get('管道天然气(PNG)', 0)
-            general_gas_count = energy_type_counts.get('天然气', 0)
-            total_gas = lng_count + png_count + general_gas_count
-            
-            if total_gas > 0:
-                print(f"\n💨 天然气类型细分：")
-                print(f"   液化天然气(LNG): {lng_count} 篇 ({lng_count/total_gas*100:.1f}%)")
-                print(f"   管道天然气(PNG): {png_count} 篇 ({png_count/total_gas*100:.1f}%)")
-                print(f"   通用天然气: {general_gas_count} 篇 ({general_gas_count/total_gas*100:.1f}%)")
-        else:
-            print("⚠️ 没有文章数据可导入")
-    
-    except Exception as e:
-        print(f"Error importing articles: {str(e)}")
-        import traceback
-        traceback.print_exc()
-    finally:
+        # 📋 基础信息标签分布（验证清理效果）
+        print(f"\n📊 基础信息标签分布：")
+        for tag, count in sorted(basic_info_counts.items(), key=lambda x: x[1], reverse=True):
+            print(f"  {tag}: {count} 篇")
+        
+        print(f"   基础信息标签已标准化: {len(basic_info_counts)} 种")
+        
+        # 🏷️ 能源类型标签分布
+        print(f"\n🏷️ 能源类型标签分布（前10）：")
+        sorted_energy = sorted(energy_type_counts.items(), key=lambda x: x[1], reverse=True)
+        for tag, count in sorted_energy[:10]:
+            print(f"  {tag}: {count} 篇")
+        
+        # 🔥 关闭数据库连接
         if client:
-            await client.close()
-    
-    print("\n✅ 文章数据导入完成！")
+            client.close()
+        print(f"\n✅ 数据导入完成！使用清理后的标准化数据")
+        
+    except Exception as e:
+        print(f"❌ 导入过程出错: {str(e)}")
+        raise
 
 async def create_sample_users():
     """创建示例用户数据"""
@@ -199,7 +332,7 @@ async def create_sample_users():
                 "username": "李经理",
                 "password": "demo123",
                 "register_city": "北京",
-                "energy_types": ["原油"],  # 覆盖率最高：42.2% (19篇)
+                "energy_types": ["重烃"],  # 覆盖率最高：42.2% (19篇)
                 "user_id": "user002",
                 "description": "石油贸易专家 - 原油进口与价格分析"
             },
@@ -283,7 +416,7 @@ async def create_sample_users():
         print(f"Error creating sample users: {str(e)}")
     finally:
         if client:
-            await client.close()
+            client.close()
 
 async def main():
     """主函数"""

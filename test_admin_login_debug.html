@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #bee3f8;
+            color: #2b6cb0;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #3182ce;
+        }
+        pre {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 管理员登录调试工具</h1>
+        <p>诊断管理员登录问题的详细工具</p>
+        
+        <div class="info">
+            <strong>当前状态:</strong><br>
+            前端地址: <span id="frontendUrl">检测中...</span><br>
+            后端地址: <span id="backendUrl">检测中...</span><br>
+            时间: <span id="currentTime"></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h2>🌐 网络连接测试</h2>
+            <button onclick="testNetworkConnection()">🔍 测试网络连接</button>
+            <div id="networkResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔐 管理员登录测试</h2>
+            <button onclick="testAdminLogin('admin', 'admin123456')">🚀 测试主管理员</button>
+            <button onclick="testAdminLogin('superadmin', 'super123456')">🚀 测试超级管理员</button>
+            <div id="loginResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 API功能测试</h2>
+            <button onclick="testApiEndpoints()">🔍 测试API端点</button>
+            <div id="apiResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 前端页面测试</h2>
+            <button onclick="testFrontendPages()">🔍 测试前端页面</button>
+            <div id="frontendResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let adminToken = null;
+
+        // 更新当前时间
+        function updateTime() {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString();
+        }
+
+        // 检测URL
+        function detectUrls() {
+            const currentUrl = window.location.href;
+            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
+            
+            document.getElementById('frontendUrl').textContent = 'http://localhost:5173 或 http://localhost:5174';
+            document.getElementById('backendUrl').textContent = 'http://localhost:8001';
+        }
+
+        // 测试网络连接
+        async function testNetworkConnection() {
+            const resultDiv = document.getElementById('networkResult');
+            let results = '<div class="info">🔍 正在测试网络连接...</div>';
+            resultDiv.innerHTML = results;
+
+            const tests = [
+                { name: '后端健康检查', url: '/api/v1/health' },
+                { name: '管理员API', url: '/api/v1/admin/stats' },
+                { name: '前端服务5173', url: 'http://localhost:5173' },
+                { name: '前端服务5174', url: 'http://localhost:5174' }
+            ];
+
+            for (const test of tests) {
+                try {
+                    const response = await fetch(test.url, { 
+                        method: 'GET',
+                        mode: test.url.startsWith('http://localhost:5') ? 'cors' : 'same-origin'
+                    });
+                    
+                    if (response.ok || response.status === 403) {
+                        results += `<div class="success">✅ ${test.name} - 正常 (${response.status})</div>`;
+                    } else {
+                        results += `<div class="error">❌ ${test.name} - 异常 (${response.status})</div>`;
+                    }
+                } catch (error) {
+                    results += `<div class="error">❌ ${test.name} - 连接失败: ${error.message}</div>`;
+                }
+                resultDiv.innerHTML = results;
+            }
+        }
+
+        // 测试管理员登录
+        async function testAdminLogin(username, password) {
+            const resultDiv = document.getElementById('loginResult');
+            
+            try {
+                resultDiv.innerHTML = '<div class="info">🔄 正在登录...</div>';
+                
+                const response = await fetch('/api/v1/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    adminToken = data.access_token;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ ${username} 登录成功!<br>
+                            用户名: ${data.admin.username}<br>
+                            角色: ${data.admin.role}<br>
+                            权限: ${data.permissions.join(', ')}<br>
+                            Token: ${data.access_token.substring(0, 50)}...
+                        </div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ ${username} 登录失败: ${error.detail}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ 网络错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 测试API端点
+        async function testApiEndpoints() {
+            const resultDiv = document.getElementById('apiResult');
+            
+            if (!adminToken) {
+                resultDiv.innerHTML = '<div class="error">❌ 请先登录管理员账户</div>';
+                return;
+            }
+            
+            const endpoints = [
+                { name: '获取统计数据', url: '/api/v1/admin/stats' },
+                { name: '获取文章列表', url: '/api/v1/admin/articles?page=1&page_size=5' },
+                { name: '获取用户列表', url: '/api/v1/admin/users?page=1&page_size=5' }
+            ];
+            
+            let results = '<div class="info">🔍 正在测试API端点...</div>';
+            resultDiv.innerHTML = results;
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint.url, {
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        results += `<div class="success">✅ ${endpoint.name} - 成功</div>`;
+                        results += `<pre>${JSON.stringify(data, null, 2).substring(0, 200)}...</pre>`;
+                    } else {
+                        const error = await response.json();
+                        results += `<div class="error">❌ ${endpoint.name} - 失败: ${error.detail}</div>`;
+                    }
+                } catch (error) {
+                    results += `<div class="error">❌ ${endpoint.name} - 网络错误: ${error.message}</div>`;
+                }
+                resultDiv.innerHTML = results;
+            }
+        }
+
+        // 测试前端页面
+        async function testFrontendPages() {
+            const resultDiv = document.getElementById('frontendResult');
+            
+            const pages = [
+                { name: '管理员登录页面', url: 'http://localhost:5173/admin/login' },
+                { name: '管理员登录页面(5174)', url: 'http://localhost:5174/admin/login' },
+                { name: '管理员仪表板', url: 'http://localhost:5173/admin/dashboard' },
+                { name: '管理员仪表板(5174)', url: 'http://localhost:5174/admin/dashboard' }
+            ];
+            
+            let results = '<div class="info">🔍 正在测试前端页面...</div>';
+            resultDiv.innerHTML = results;
+            
+            for (const page of pages) {
+                try {
+                    const response = await fetch(page.url, { mode: 'no-cors' });
+                    results += `<div class="success">✅ ${page.name} - 可访问</div>`;
+                    results += `<div class="info">🔗 <a href="${page.url}" target="_blank">打开页面</a></div>`;
+                } catch (error) {
+                    results += `<div class="error">❌ ${page.name} - 无法访问</div>`;
+                }
+                resultDiv.innerHTML = results;
+            }
+            
+            results += `
+                <div class="info">
+                    💡 提示: 请点击上方链接直接访问管理员页面进行测试
+                </div>
+            `;
+            resultDiv.innerHTML = results;
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            updateTime();
+            detectUrls();
+            setInterval(updateTime, 1000);
+            
+            console.log('🚀 管理员登录调试工具已加载');
+            console.log('📝 内置管理员账户:');
+            console.log('  - admin / admin123456');
+            console.log('  - superadmin / super123456');
+            
+            // 自动测试网络连接
+            setTimeout(testNetworkConnection, 1000);
+        };
+    </script>
+</body>
+</html> 

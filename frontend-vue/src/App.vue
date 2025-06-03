@@ -1,50 +1,58 @@
 <template>
   <div class="app-layout">
-    <el-header class="header-bar" v-if="!isLoginPage">
-      <div class="header-left">
-        <span class="logo">⛽ 石油天然气信息门户</span>
-      </div>
-      <div class="header-right">
-        <template v-if="isLoggedIn && userInfo">
-          <el-tag type="info" class="mr-2">{{ userInfo.username || userInfo.email }}</el-tag>
-          <el-button type="default" icon="el-icon-bell" class="mr-2" @click="goNotifications">消息通知</el-button>
-          <el-button type="primary" icon="el-icon-setting" @click="goSettings" class="mr-2">设置</el-button>
-          <el-button type="danger" @click="logout">退出</el-button>
-        </template>
-        <template v-else>
-          <el-button type="primary" @click="() => router.push('/login')">登录</el-button>
-        </template>
-      </div>
-    </el-header>
-    <div class="main-content">
-      <el-aside width="180px" class="sidebar-nav" v-if="!isLoginPage && isLoggedIn">
-        <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" @select="handleMenuSelect" router>
-          <el-menu-item index="/dashboard">
-            <el-icon><i class="el-icon-menu"></i></el-icon>
-            <span>仪表盘</span>
-          </el-menu-item>
-          <el-menu-item index="/tags">
-            <el-icon><i class="el-icon-collection"></i></el-icon>
-            <span>标签管理</span>
-          </el-menu-item>
-          <el-menu-item index="/content">
-            <el-icon><i class="el-icon-document"></i></el-icon>
-            <span>内容资讯</span>
-          </el-menu-item>
-          <el-menu-item index="/market">
-            <el-icon><i class="el-icon-data-analysis"></i></el-icon>
-            <span>行情信息</span>
-          </el-menu-item>
-          <el-menu-item index="/ai">
-            <el-icon><i class="el-icon-robot"></i></el-icon>
-            <span>AI助手</span>
-          </el-menu-item>
-        </el-menu>
-      </el-aside>
-      <el-main>
-        <router-view />
-      </el-main>
+    <!-- 登录、注册和管理员页面使用独立布局 -->
+    <div v-if="isAuthPage || isAdminPage" class="auth-layout">
+      <router-view />
     </div>
+    
+    <!-- 主应用布局（仅在普通用户页面显示） -->
+    <template v-else>
+      <el-header class="header-bar">
+        <div class="header-left">
+          <span class="logo">⛽ 上海石油天然气交易中心信息门户系统</span>
+        </div>
+        <div class="header-right">
+          <template v-if="isLoggedIn && userInfo">
+            <el-tag type="info" class="mr-2">{{ userInfo.username || userInfo.email }}</el-tag>
+            <el-button type="default" icon="el-icon-bell" class="mr-2" @click="goNotifications">消息通知</el-button>
+            <el-button type="primary" icon="el-icon-setting" @click="goSettings" class="mr-2">设置</el-button>
+            <el-button type="danger" @click="logout">退出</el-button>
+          </template>
+          <template v-else>
+            <el-button type="primary" @click="() => router.push('/login')">登录</el-button>
+          </template>
+        </div>
+      </el-header>
+      <div class="main-content">
+        <el-aside width="180px" class="sidebar-nav" v-if="isLoggedIn">
+          <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" @select="handleMenuSelect" router>
+            <el-menu-item index="/dashboard">
+              <el-icon><i class="el-icon-menu"></i></el-icon>
+              <span>仪表盘</span>
+            </el-menu-item>
+            <el-menu-item index="/tags">
+              <el-icon><i class="el-icon-collection"></i></el-icon>
+              <span>标签管理</span>
+            </el-menu-item>
+            <el-menu-item index="/content">
+              <el-icon><i class="el-icon-document"></i></el-icon>
+              <span>内容资讯</span>
+            </el-menu-item>
+            <el-menu-item index="/market">
+              <el-icon><i class="el-icon-data-analysis"></i></el-icon>
+              <span>行情信息</span>
+            </el-menu-item>
+            <el-menu-item index="/ai">
+              <el-icon><i class="el-icon-robot"></i></el-icon>
+              <span>AI助手</span>
+            </el-menu-item>
+          </el-menu>
+        </el-aside>
+        <el-main>
+          <router-view />
+        </el-main>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -71,7 +79,22 @@ onMounted(() => {
 const userInfo = computed(() => userStore.currentUser)
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 const activeMenu = computed(() => route.path)
-const isLoginPage = computed(() => route.path === '/login' || route.path === '/register')
+
+// 更明确地定义认证页面（登录、注册等）和管理员页面
+const isAuthPage = computed(() => {
+  const authPaths = ['/login', '/register', '/login-simple', '/admin/login']
+  return authPaths.includes(route.path)
+})
+
+// 检查是否是管理员页面
+const isAdminPage = computed(() => {
+  return route.path.startsWith('/admin')
+})
+
+// 是否显示普通用户布局
+const showUserLayout = computed(() => {
+  return !isAuthPage.value && !isAdminPage.value
+})
 
 const logout = () => {
   userStore.logout()
@@ -97,11 +120,22 @@ const handleMenuSelect = (index: string) => {
   display: flex;
   flex-direction: column;
 }
+
+/* 认证页面独立布局 - 全屏无干扰 */
+.auth-layout {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  z-index: 1000;
+}
+
+/* 主应用布局 */
 .main-content {
   display: flex;
   flex: 1;
   background: #f5f7fa;
 }
+
 .el-aside.sidebar-nav {
   background: #fff;
   border-right: 1px solid #e4e7ed;
@@ -109,35 +143,43 @@ const handleMenuSelect = (index: string) => {
   min-height: calc(100vh - 56px);
   padding-top: 16px;
 }
+
 .el-main {
   flex: 1;
-  padding: 32px 24px 24px 24px;
+  padding: 24px;
   background: #f5f7fa;
 }
+
 .el-menu-vertical-demo {
   border-right: none;
 }
+
 .el-menu-item {
   font-size: 16px;
   height: 48px;
   line-height: 48px;
 }
+
 .el-menu-item.is-active {
   background: #e6f7ff !important;
   color: #1769aa !important;
 }
+
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
 }
+
 .header-bar {
   display: flex;
   justify-content: space-between;
@@ -148,6 +190,7 @@ const handleMenuSelect = (index: string) => {
   border-bottom: 1px solid #e4e7ed;
   box-shadow: 0 2px 8px #e4e7ed33;
 }
+
 .header-left .logo {
   font-weight: bold;
   font-size: 22px;
@@ -156,9 +199,13 @@ const handleMenuSelect = (index: string) => {
   display: flex;
   align-items: center;
 }
+
 .header-right {
   display: flex;
   align-items: center;
 }
-.mr-2 { margin-right: 12px; }
+
+.mr-2 { 
+  margin-right: 12px; 
+}
 </style>

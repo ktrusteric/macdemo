@@ -1,118 +1,132 @@
 <template>
-  <div class="login-container">
-    <div class="login-card">
-      <div class="login-header">
-        <h1 class="platform-title">
-          <el-icon class="platform-icon"><Platform /></el-icon>
-          上海石油天然气交易中心
-        </h1>
-        <p class="platform-subtitle">能源资讯智能咨询系统</p>
-      </div>
-
-      <el-card class="login-form-card" shadow="always">
-        <template #header>
-          <div class="form-header">
-            <el-icon class="form-icon"><User /></el-icon>
-            <span class="form-title">用户登录</span>
+  <div class="login-page">
+    <div class="login-background">
+      <div class="background-shape shape-1"></div>
+      <div class="background-shape shape-2"></div>
+      <div class="background-shape shape-3"></div>
+    </div>
+    
+    <div class="login-container">
+      <div class="login-content">
+        <!-- 顶部标题区域 -->
+        <div class="login-header">
+          <div class="platform-logo">
+            <el-icon class="platform-icon"><Platform /></el-icon>
           </div>
-        </template>
-
-        <el-form :model="form" :rules="rules" ref="loginForm" @submit.prevent="onSubmit" size="large">
-          <el-form-item prop="email">
-            <el-input 
-              v-model="form.email" 
-              placeholder="请输入邮箱地址"
-              autocomplete="off"
-              clearable
-            >
-              <template #prefix>
-                <el-icon><Message /></el-icon>
-              </template>
-            </el-input>
-          </el-form-item>
-          
-          <el-form-item prop="password">
-            <el-input 
-              v-model="form.password" 
-              type="password" 
-              placeholder="请输入密码"
-              autocomplete="off"
-              show-password
-            >
-              <template #prefix>
-                <el-icon><Lock /></el-icon>
-              </template>
-            </el-input>
-          </el-form-item>
-          
-          <el-form-item>
-            <el-button 
-              type="primary" 
-              @click="onSubmit" 
-              :loading="loading"
-              size="large"
-              style="width: 100%"
-            >
-              <el-icon><Key /></el-icon>
-              登录系统
-            </el-button>
-          </el-form-item>
-        </el-form>
-
-        <el-alert v-if="error" :title="error" type="error" show-icon class="error-alert" />
-
-        <div class="login-footer">
-          <el-link type="primary" @click="goRegister" :underline="false">
-            <el-icon><Plus /></el-icon>
-            还没有账号？立即注册
-          </el-link>
+          <h1 class="platform-title">上海石油天然气交易中心</h1>
+          <p class="platform-subtitle">能源资讯智能推荐系统</p>
         </div>
-      </el-card>
 
-      <!-- 测试账号区域 -->
-      <el-card class="demo-accounts-card" shadow="hover">
-        <template #header>
-          <div class="demo-header">
-            <el-icon class="demo-icon"><Avatar /></el-icon>
-            <span class="demo-title">演示账号</span>
-            <el-tag type="success" size="small">可直接登录</el-tag>
-          </div>
-        </template>
+        <!-- 登录表单卡片 -->
+        <el-card class="login-form-card" shadow="always">
+          <template #header>
+            <div class="form-header">
+              <el-icon class="form-icon"><User /></el-icon>
+              <span class="form-title">用户登录</span>
+            </div>
+          </template>
 
-        <div class="demo-users-grid">
-          <div 
-            v-for="user in demoUsers" 
-            :key="user.email" 
-            class="demo-user-card"
-            @click="quickLogin(user)"
-          >
-            <div class="user-info">
-              <el-avatar 
-                :size="40" 
-                :style="{ backgroundColor: user.color }"
+          <el-form :model="form" :rules="rules" ref="loginForm" @submit.prevent="onSubmit" size="large">
+            <el-form-item prop="email">
+              <el-input 
+                v-model="form.email" 
+                placeholder="请输入邮箱地址"
+                autocomplete="off"
+                clearable
               >
-                {{ user.username[0] }}
-              </el-avatar>
-              <div class="user-details">
-                <div class="user-name">{{ user.username }}</div>
-                <div class="user-email">{{ user.email }}</div>
-                <div class="user-tags">
-                  <el-tag size="small" type="info">{{ user.city }}</el-tag>
-                  <el-tag size="small" type="warning">{{ user.energy }}</el-tag>
+                <template #prefix>
+                  <el-icon><Message /></el-icon>
+                </template>
+              </el-input>
+            </el-form-item>
+            
+            <el-form-item prop="password">
+              <el-input 
+                v-model="form.password" 
+                type="password" 
+                placeholder="请输入密码"
+                autocomplete="off"
+                show-password
+              >
+                <template #prefix>
+                  <el-icon><Lock /></el-icon>
+                </template>
+              </el-input>
+            </el-form-item>
+            
+            <el-form-item>
+              <el-button 
+                type="primary" 
+                @click="onSubmit" 
+                :loading="loading"
+                size="large"
+                class="login-button"
+              >
+                <el-icon><Key /></el-icon>
+                登录系统
+              </el-button>
+            </el-form-item>
+          </el-form>
+
+          <el-alert v-if="error" :title="error" type="error" show-icon class="error-alert" />
+
+          <div class="login-footer">
+            <el-link type="primary" @click="goRegister" :underline="false" class="register-link">
+              <el-icon><Plus /></el-icon>
+              还没有账号？立即注册
+            </el-link>
+          </div>
+        </el-card>
+
+        <!-- 演示账号区域 -->
+        <el-card class="demo-accounts-card" shadow="hover">
+          <template #header>
+            <div class="demo-header">
+              <el-icon class="demo-icon"><Avatar /></el-icon>
+              <span class="demo-title">演示账号</span>
+              <el-tag type="success" size="small">可直接登录</el-tag>
+            </div>
+          </template>
+
+          <div class="demo-users-grid">
+            <div 
+              v-for="user in demoUsers" 
+              :key="user.email" 
+              class="demo-user-card"
+              @click="quickLogin(user)"
+            >
+              <div class="user-info">
+                <el-avatar 
+                  :size="44" 
+                  :style="{ backgroundColor: user.color }"
+                  class="user-avatar"
+                >
+                  {{ user.username[0] }}
+                </el-avatar>
+                <div class="user-details">
+                  <div class="user-name">{{ user.username }}</div>
+                  <div class="user-email">{{ user.email }}</div>
+                  <div class="user-tags">
+                    <el-tag size="small" type="info">{{ user.city }}</el-tag>
+                    <el-tag size="small" type="warning">{{ user.energy }}</el-tag>
+                  </div>
                 </div>
               </div>
+              <el-icon class="quick-login-icon"><Right /></el-icon>
             </div>
-            <el-icon class="quick-login-icon"><Right /></el-icon>
           </div>
-        </div>
 
-        <div class="demo-footer">
-          <el-text type="info" size="small">
-            <el-icon><InfoFilled /></el-icon>
-            点击任意账号即可快速登录体验，密码统一为 demo123
-          </el-text>
-        </div>
-      </el-card>
+          <div class="demo-footer">
+            <el-text type="info" size="small">
+              <el-icon><InfoFilled /></el-icon>
+              点击任意账号即可快速登录体验，密码统一为 demo123
+            </el-text>
+          </div>
+        </el-card>
+
+        <!-- 页面宽度占位符 - 不可见但确保页面宽度一致 -->
+        <div class="width-placeholder" aria-hidden="true"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -245,71 +259,165 @@ const goRegister = () => {
 </script>
 
 <style scoped>
+.login-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  z-index: 9999;
+}
+
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  overflow: hidden;
+}
+
+.background-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  animation: float 20s ease-in-out infinite;
+}
+
+.shape-1 {
+  width: 300px;
+  height: 300px;
+  background: white;
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.shape-2 {
+  width: 200px;
+  height: 200px;
+  background: white;
+  top: 60%;
+  right: 15%;
+  animation-delay: 7s;
+}
+
+.shape-3 {
+  width: 150px;
+  height: 150px;
+  background: white;
+  bottom: 20%;
+  left: 70%;
+  animation-delay: 14s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-30px) rotate(120deg); }
+  66% { transform: translateY(30px) rotate(240deg); }
+}
+
 .login-container {
+  position: relative;
+  z-index: 10;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 40px 20px;
 }
 
-.login-card {
+.login-content {
   width: 100%;
-  max-width: 900px;
+  max-width: 1280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
   color: white;
+  margin-bottom: 16px;
 }
 
-.platform-title {
-  font-size: 32px;
-  font-weight: bold;
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+.platform-logo {
+  margin-bottom: 16px;
 }
 
 .platform-icon {
-  font-size: 36px;
+  font-size: 64px;
   color: #FFD700;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+.platform-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 16px 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  letter-spacing: 1px;
 }
 
 .platform-subtitle {
-  font-size: 16px;
+  font-size: 18px;
   opacity: 0.9;
   margin: 0;
+  font-weight: 300;
 }
 
 .login-form-card {
-  margin-bottom: 24px;
-  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 20px;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .form-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: bold;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  justify-content: center;
 }
 
 .form-icon {
   color: #409EFF;
+  font-size: 24px;
 }
 
 .form-title {
   color: #303133;
 }
 
+.login-button {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  background: linear-gradient(45deg, #409EFF, #67C23A);
+  border: none;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(64, 158, 255, 0.4);
+}
+
 .error-alert {
   margin-top: 16px;
+  border-radius: 8px;
 }
 
 .login-footer {
@@ -319,21 +427,33 @@ const goRegister = () => {
   border-top: 1px solid #EBEEF5;
 }
 
+.register-link {
+  font-size: 15px;
+  font-weight: 500;
+}
+
 .demo-accounts-card {
-  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 20px;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .demo-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: bold;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .demo-icon {
   color: #67C23A;
+  font-size: 22px;
 }
 
 .demo-title {
@@ -343,33 +463,38 @@ const goRegister = () => {
 
 .demo-users-grid {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 
 .demo-user-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 20px;
   border: 2px solid #EBEEF5;
-  border-radius: 12px;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s;
-  background: #FAFAFA;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #FAFAFA, #F5F7FA);
 }
 
 .demo-user-card:hover {
   border-color: #409EFF;
-  background: #ECF5FF;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+  background: linear-gradient(135deg, #ECF5FF, #F0F9FF);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(64, 158, 255, 0.2);
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   flex: 1;
+}
+
+.user-avatar {
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .user-details {
@@ -377,55 +502,102 @@ const goRegister = () => {
 }
 
 .user-name {
-  font-weight: bold;
+  font-weight: 600;
   color: #303133;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  font-size: 16px;
 }
 
 .user-email {
   font-size: 13px;
   color: #909399;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .user-tags {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .quick-login-icon {
   color: #C0C4CC;
-  font-size: 16px;
-  transition: all 0.3s;
+  font-size: 18px;
+  transition: all 0.3s ease;
 }
 
 .demo-user-card:hover .quick-login-icon {
   color: #409EFF;
-  transform: translateX(4px);
+  transform: translateX(6px);
 }
 
 .demo-footer {
   text-align: center;
-  margin-top: 16px;
+  margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid #EBEEF5;
 }
 
 :deep(.el-card__header) {
-  background: #F8F9FA;
+  background: linear-gradient(135deg, #F8F9FA, #FFFFFF);
   border-bottom: 1px solid #EBEEF5;
+  padding: 20px;
+}
+
+:deep(.el-card__body) {
+  padding: 24px;
 }
 
 :deep(.el-form-item) {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 :deep(.el-input__wrapper) {
-  border-radius: 8px;
+  border-radius: 12px;
+  padding: 0 16px;
+  height: 48px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-:deep(.el-button) {
-  border-radius: 8px;
-  font-weight: bold;
+:deep(.el-input__wrapper:hover) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+/* 页面宽度占位符 - 不可见但确保页面宽度一致 */
+.width-placeholder {
+  width: 1280px;
+  min-width: 1280px;
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+  position: relative;
+  margin: 0 auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 20px 10px;
+  }
+  
+  .platform-title {
+    font-size: 28px;
+  }
+  
+  .platform-subtitle {
+    font-size: 16px;
+  }
+  
+  .demo-users-grid {
+    gap: 12px;
+  }
+  
+  .demo-user-card {
+    padding: 16px;
+  }
 }
 </style> 

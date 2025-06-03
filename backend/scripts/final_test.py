@@ -1,88 +1,66 @@
 #!/usr/bin/env python3
-import json
-import subprocess
+import asyncio
+import motor.motor_asyncio
 import sys
+import os
 
-def test_api():
-    print("🎉 最终验证测试")
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.core.security import verify_password
+
+async def final_test():
+    print("🧪 最终登录功能验证")
     print("=" * 50)
     
-    # 测试API响应
-    try:
-        result = subprocess.run(
-            ['curl', '-s', 'http://localhost:8001/api/v1/content/?page=1&page_size=100'],
-            capture_output=True, text=True, timeout=10
-        )
-        
-        if result.returncode == 0:
-            try:
-                data = json.loads(result.stdout)
-                items = data.get('items', [])
-                total = data.get('total', 0)
-                
-                print(f"✅ API响应成功")
-                print(f"📊 返回数据: {len(items)}篇文章，总计: {total}篇")
-                
-                # 测试筛选逻辑
-                market_count = len([item for item in items 
-                                   if '行业资讯' in item.get('basic_info_tags', [])])
-                policy_count = len([item for item in items 
-                                   if '政策法规' in item.get('basic_info_tags', [])])
-                trade_count = len([item for item in items 
-                                  if '交易公告' in item.get('basic_info_tags', [])])
-                price_count = len([item for item in items 
-                                  if '调价公告' in item.get('basic_info_tags', [])])
-                
-                print(f"\n🔍 筛选验证:")
-                print(f"📈 行情资讯: {market_count}篇")
-                print(f"📋 政策法规: {policy_count}篇") 
-                print(f"📢 交易公告: {trade_count}篇")
-                print(f"💰 调价公告: {price_count}篇")
-                print(f"📊 总公告数: {trade_count + price_count}篇")
-                
-                # 验证期望结果
-                expected_results = {
-                    "total": 51,
-                    "market": 26,
-                    "policy": 20,
-                    "trade": 3,
-                    "price": 2
-                }
-                
-                print(f"\n✅ 结果验证:")
-                results = {
-                    "total": total,
-                    "market": market_count,
-                    "policy": policy_count,
-                    "trade": trade_count,
-                    "price": price_count
-                }
-                
-                all_correct = True
-                for key, expected in expected_results.items():
-                    actual = results[key]
-                    status = "✅" if actual == expected else "❌"
-                    print(f"   {key}: {actual} (期望: {expected}) {status}")
-                    if actual != expected:
-                        all_correct = False
-                
-                if all_correct:
-                    print(f"\n🎉 所有测试通过！前端筛选功能已修复")
-                    print(f"   - 行情筛选: 可筛选出{market_count}篇行业资讯")
-                    print(f"   - 政策筛选: 可筛选出{policy_count}篇政策法规")
-                    print(f"   - 公告筛选: 可筛选出{trade_count + price_count}篇公告")
-                else:
-                    print(f"\n❌ 部分测试失败，请检查数据")
-                    
-            except json.JSONDecodeError as e:
-                print(f"❌ JSON解析失败: {e}")
-                print(f"原始响应: {result.stdout[:200]}...")
-                
-        else:
-            print(f"❌ API请求失败: {result.stderr}")
+    client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://localhost:27017')
+    db = client.energy_info
+    
+    # 测试用户列表
+    test_users = [
+        ('zhang@shanghai.com', 'demo123'),
+        ('li@beijing.com', 'demo123'),
+        ('wang@shenzhen.com', 'demo123'),
+        ('chen@guangzhou.com', 'demo123'),
+        ('liu@chengdu.com', 'demo123')
+    ]
+    
+    print("1. 密码哈希验证测试:")
+    all_passed = True
+    
+    for email, password in test_users:
+        user = await db.users.find_one({'email': email})
+        if user:
+            has_required_fields = all(field in user for field in ['id', 'role', 'is_active', 'hashed_password'])
+            password_valid = verify_password(password, user['hashed_password'])
             
-    except Exception as e:
-        print(f"❌ 测试异常: {e}")
+            status = "✅" if has_required_fields and password_valid else "❌"
+            print(f"   {status} {user['username']} ({email})")
+            
+            if not (has_required_fields and password_valid):
+                all_passed = False
+                if not has_required_fields:
+                    print(f"     - 缺少必要字段")
+                if not password_valid:
+                    print(f"     - 密码验证失败")
+        else:
+            print(f"   ❌ {email} - 用户不存在")
+            all_passed = False
+    
+    print(f"\n2. 总体测试结果:")
+    if all_passed:
+        print("   ✅ 所有用户登录功能正常")
+        print("   ✅ bcrypt哈希问题已解决")
+        print("   ✅ 用户数据结构完整")
+        print("\n🎉 登录功能修复完成！")
+        print("\n📱 可以测试的账号:")
+        for email, password in test_users:
+            user = await db.users.find_one({'email': email})
+            if user:
+                print(f"   - {user['username']}: {email} / {password}")
+    else:
+        print("   ❌ 仍有问题需要解决")
+    
+    client.close()
 
 if __name__ == "__main__":
-    test_api() 
+    asyncio.run(final_test()) 

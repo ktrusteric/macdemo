@@ -111,3 +111,23 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserProfile
+
+# 管理员登录请求模型
+class AdminLoginRequest(BaseModel):
+    username: str = Field(..., min_length=2, max_length=50)
+    password: str = Field(..., min_length=6)
+
+# 管理员登录响应模型
+class AdminLoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    admin: UserProfile
+    permissions: List[str] = Field(default_factory=list)
+
+# 管理员权限枚举
+class AdminPermission(str, Enum):
+    MANAGE_ARTICLES = "manage_articles"
+    MANAGE_USERS = "manage_users"
+    MANAGE_TAGS = "manage_tags"
+    VIEW_ANALYTICS = "view_analytics"
+    SYSTEM_CONFIG = "system_config"

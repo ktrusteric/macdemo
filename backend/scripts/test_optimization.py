@@ -14,7 +14,7 @@ from app.services.recommendation_service import RecommendationService
 async def test_optimization_effects():
     """测试优化后的推荐效果"""
     
-    print("🎯 能源信息服务系统 - 优化效果验证")
+    print("🎯 上海石油天然气交易中心信息门户系统 - 优化效果验证")
     print("=" * 60)
     
     # 连接数据库

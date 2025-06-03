@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #2d3748;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #bee3f8;
+            color: #2b6cb0;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #3182ce;
+        }
+        .login-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 10px 0;
+        }
+        input {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        pre {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .link-section {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .link-section a {
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+            margin-right: 15px;
+        }
+        .link-section a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ 管理员功能测试页面</h1>
+        <p>测试能源信息服务系统的管理员功能是否正常工作</p>
+        
+        <div class="link-section">
+            <h3>🔗 快速访问链接</h3>
+            <a href="http://localhost:5173/admin/login" target="_blank">📝 管理员登录页面</a>
+            <a href="http://localhost:5173/admin/dashboard" target="_blank">🛠️ 管理员仪表板</a>
+            <a href="http://localhost:8001/docs" target="_blank">📚 后端API文档</a>
+            <a href="http://localhost:5173/login" target="_blank">👤 用户登录页面</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h2>🔐 管理员登录测试</h2>
+            <div class="info">
+                <strong>内置管理员账户:</strong><br>
+                <div style="margin: 10px 0;">
+                    <strong>主管理员:</strong><br>
+                    用户名: admin | 密码: admin123456
+                </div>
+                <div style="margin: 10px 0;">
+                    <strong>超级管理员:</strong><br>
+                    用户名: superadmin | 密码: super123456
+                </div>
+                <small>💡 这些是系统内置账户，无需单独创建</small>
+            </div>
+            
+            <div class="login-form">
+                <input type="text" id="username" placeholder="用户名" value="admin">
+                <input type="password" id="password" placeholder="密码" value="admin123456">
+                <button onclick="testAdminLogin()">🚀 测试登录</button>
+            </div>
+            
+            <div class="login-form">
+                <input type="text" id="username2" placeholder="用户名" value="superadmin">
+                <input type="password" id="password2" placeholder="密码" value="super123456">
+                <button onclick="testSuperAdminLogin()">🚀 测试超级管理员</button>
+            </div>
+            
+            <div id="loginResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 管理员API测试</h2>
+            <p>测试管理员相关的API接口</p>
+            
+            <button onclick="testGetStats()">📈 获取统计数据</button>
+            <button onclick="testGetArticles()">📄 获取文章列表</button>
+            <button onclick="testCreateArticle()">➕ 创建测试文章</button>
+            
+            <div id="apiResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌐 前端页面测试</h2>
+            <p>测试前端管理员页面是否正常加载</p>
+            
+            <button onclick="testFrontendPages()">🔍 测试前端页面</button>
+            
+            <div id="frontendResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let adminToken = null;
+
+        // 测试管理员登录
+        async function testAdminLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            await performAdminLogin(username, password, '主管理员');
+        }
+
+        // 测试超级管理员登录
+        async function testSuperAdminLogin() {
+            const username = document.getElementById('username2').value;
+            const password = document.getElementById('password2').value;
+            await performAdminLogin(username, password, '超级管理员');
+        }
+
+        // 执行管理员登录
+        async function performAdminLogin(username, password, accountType) {
+            const resultDiv = document.getElementById('loginResult');
+            
+            try {
+                const response = await fetch('/api/v1/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    adminToken = data.access_token;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ ${accountType}登录成功!<br>
+                            用户名: ${data.admin.username}<br>
+                            角色: ${data.admin.role}<br>
+                            用户ID: ${data.admin.id}<br>
+                            权限: ${data.permissions.join(', ')}
+                        </div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ ${accountType}登录失败: ${error.detail}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ 网络错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 测试获取统计数据
+        async function testGetStats() {
+            const resultDiv = document.getElementById('apiResult');
+            
+            if (!adminToken) {
+                resultDiv.innerHTML = '<div class="error">❌ 请先登录管理员账户</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/admin/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ 获取统计数据成功!
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ 获取统计数据失败: ${error.detail}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ 网络错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 测试获取文章列表
+        async function testGetArticles() {
+            const resultDiv = document.getElementById('apiResult');
+            
+            if (!adminToken) {
+                resultDiv.innerHTML = '<div class="error">❌ 请先登录管理员账户</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/admin/articles?page=1&page_size=5', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ 获取文章列表成功! 共 ${data.total} 篇文章
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ 获取文章列表失败: ${error.detail}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ 网络错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 测试创建文章
+        async function testCreateArticle() {
+            const resultDiv = document.getElementById('apiResult');
+            
+            if (!adminToken) {
+                resultDiv.innerHTML = '<div class="error">❌ 请先登录管理员账户</div>';
+                return;
+            }
+            
+            const testArticle = {
+                title: "测试文章 - " + new Date().toLocaleString(),
+                content: "这是一篇由管理员功能测试页面创建的测试文章。",
+                type: "news",
+                source: "管理员测试",
+                publish_time: new Date().toISOString()
+            };
+            
+            try {
+                const response = await fetch('/api/v1/admin/articles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify(testArticle)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ 创建测试文章成功!
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ 创建文章失败: ${error.detail}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ 网络错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 测试前端页面
+        async function testFrontendPages() {
+            const resultDiv = document.getElementById('frontendResult');
+            const pages = [
+                { name: '管理员登录页面', url: '/admin/login' },
+                { name: '管理员仪表板', url: '/admin/dashboard' },
+                { name: '文章管理页面', url: '/admin/articles' },
+                { name: '用户管理页面', url: '/admin/users' }
+            ];
+            
+            let results = '<div class="info">🔍 正在测试前端页面...</div>';
+            resultDiv.innerHTML = results;
+            
+            for (const page of pages) {
+                try {
+                    const response = await fetch(`http://localhost:5173${page.url}`);
+                    if (response.ok) {
+                        results += `<div class="success">✅ ${page.name} - 正常</div>`;
+                    } else {
+                        results += `<div class="error">❌ ${page.name} - 错误 (${response.status})</div>`;
+                    }
+                } catch (error) {
+                    results += `<div class="error">❌ ${page.name} - 网络错误</div>`;
+                }
+                resultDiv.innerHTML = results;
+            }
+            
+            results += `
+                <div class="info">
+                    💡 提示: 如果页面显示正常，请点击上方的快速访问链接直接访问管理员页面。
+                </div>
+            `;
+            resultDiv.innerHTML = results;
+        }
+
+        // 页面加载时自动测试基本连接
+        window.onload = function() {
+            console.log('🚀 管理员功能测试页面已加载');
+            console.log('📝 默认管理员账户: admin / admin123456');
+            console.log('🌐 前端地址: http://localhost:5173');
+            console.log('🔧 后端地址: http://localhost:8001');
+        };
+    </script>
+</body>
+</html> 

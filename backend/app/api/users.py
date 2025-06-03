@@ -11,6 +11,7 @@ from app.core.config import settings
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 import logging
+from ..utils.tag_processor import TagProcessor
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -650,3 +651,49 @@ async def get_provinces_with_cities():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get provinces with cities: {str(e)}"
         )
+
+@router.get("/tag-options")
+async def get_tag_options():
+    """获取所有标签选项配置"""
+    try:
+        # 从 RegionMapper 获取地区数据
+        all_cities = RegionMapper.get_all_cities()
+        all_provinces_data = RegionMapper.get_all_provinces()
+        all_regions_data = RegionMapper.get_all_regions()
+        
+        # 构建城市按区域分组的数据
+        cities_by_region = {}
+        for region_data in all_regions_data:
+            region_code = region_data['code']
+            cities_in_region = RegionMapper.get_cities_by_region(region_code)
+            if cities_in_region:
+                cities_by_region[region_data['name']] = cities_in_region
+        
+        return {
+            # 基础标签配置
+            "energy_type_tags": TagProcessor.STANDARD_ENERGY_TYPES,
+            "basic_info_tags": TagProcessor.STANDARD_BASIC_INFO_TAGS,
+            "business_field_tags": TagProcessor.STANDARD_BUSINESS_FIELD_TAGS,
+            "beneficiary_tags": TagProcessor.STANDARD_BENEFICIARY_TAGS,
+            "policy_measure_tags": TagProcessor.STANDARD_POLICY_MEASURE_TAGS,
+            "importance_tags": TagProcessor.STANDARD_IMPORTANCE_TAGS,
+            
+            # 内容类型映射
+            "content_type_map": TagProcessor.CONTENT_TYPE_MAP,
+            
+            # 地区标签配置
+            "region_tags": {
+                "cities": all_cities,
+                "cities_by_region": cities_by_region,
+                "provinces": [p['name'] for p in all_provinces_data],
+                "regions": [r['name'] for r in all_regions_data],
+                "total_cities": len(all_cities),
+                "total_provinces": len(all_provinces_data),
+                "total_regions": len(all_regions_data)
+            }
+        }
+    except Exception as e:
+        logger.error(f"获取标签选项失败: {str(e)}")
+        import traceback
+        logger.error(f"错误堆栈: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"获取标签选项失败: {str(e)}")

@@ -434,4 +434,49 @@ class UserService:
             return User(**user_doc)
             
         except Exception as e:
-            raise Exception(f"Failed to get demo user by ID: {str(e)}") 
+            raise Exception(f"Failed to get demo user by ID: {str(e)}")
+    
+    async def get_users(self, page: int = 1, page_size: int = 20) -> dict:
+        """获取用户列表（用于管理员后台）"""
+        try:
+            # 计算跳过数量
+            skip = (page - 1) * page_size
+            
+            # 获取总数
+            total = await self.users_collection.count_documents({})
+            
+            # 获取用户列表
+            cursor = self.users_collection.find(
+                {},
+                {"hashed_password": 0, "_id": 0}  # 排除密码字段和_id字段
+            ).skip(skip).limit(page_size).sort("created_at", -1)  # 按创建时间倒序
+            
+            users_list = []
+            async for user_doc in cursor:
+                # 获取用户标签数量
+                tags_count = 0
+                user_tags = await self.user_tags_collection.find_one({"user_id": user_doc["id"]})
+                if user_tags and "tags" in user_tags:
+                    tags_count = len(user_tags["tags"])
+                
+                user_info = {
+                    "id": user_doc["id"],
+                    "username": user_doc.get("username", ""),
+                    "email": user_doc.get("email", ""),
+                    "register_city": user_doc.get("register_city"),
+                    "role": user_doc.get("role", "free"),
+                    "is_active": user_doc.get("is_active", True),
+                    "created_at": user_doc.get("created_at", ""),
+                    "tags_count": tags_count
+                }
+                users_list.append(user_info)
+            
+            return {
+                "data": users_list,
+                "total": total,
+                "page": page,
+                "page_size": page_size
+            }
+            
+        except Exception as e:
+            raise Exception(f"Failed to get users: {str(e)}") 

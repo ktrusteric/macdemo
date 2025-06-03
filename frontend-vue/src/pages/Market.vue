@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="dashboard-container">
     <div class="header-section">
       <h1 class="page-title">
         <el-icon class="title-icon"><TrendCharts /></el-icon>
@@ -182,6 +182,9 @@
         </el-descriptions>
       </div>
     </el-dialog>
+
+    <!-- 页面宽度占位符 - 不可见但确保页面宽度一致 -->
+    <div class="width-placeholder" aria-hidden="true"></div>
   </div>
 </template>
 <script setup lang="ts">
@@ -325,12 +328,10 @@ onMounted(() => {
 })
 </script>
 <style scoped>
-.page-container {
+.dashboard-container {
+  min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 24px 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  min-height: 100vh;
 }
 
 .header-section {
@@ -404,10 +405,15 @@ onMounted(() => {
   margin-top: 8px;
 }
 
+.market-list {
+  min-height: 600px;
+}
+
 .market-list-card {
   border-radius: 16px;
   border: none;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  min-height: 500px;
 }
 
 .card-header {
@@ -436,6 +442,7 @@ onMounted(() => {
   transition: all 0.3s ease;
   background: white;
   overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .market-item-enhanced:hover {
@@ -579,10 +586,6 @@ onMounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .page-container {
-    padding: 16px 12px;
-  }
-  
   .header-section {
     padding: 16px;
   }
@@ -594,5 +597,16 @@ onMounted(() => {
   .market-item-enhanced {
     margin-bottom: 16px;
   }
+}
+
+/* 页面宽度占位符 - 不可见但确保页面宽度一致 */
+.width-placeholder {
+  width: 1280px;
+  min-width: 1280px;
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+  position: relative;
+  margin: 0 auto;
 }
 </style> 

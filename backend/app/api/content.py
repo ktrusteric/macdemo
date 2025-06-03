@@ -350,14 +350,46 @@ async def recommend_content(
             items_per_type = max(1, limit // len(content_types_to_try))
             
             for content_type in content_types_to_try:
-                type_contents = await content_service.get_content_by_tags(
-                    basic_info_tags=[content_type],
-                    region_tags=region_tags,
-                    energy_type_tags=energy_type_tags,
-                    limit=items_per_type
-                )
+                # 优先级查询：先尝试匹配地区+能源+类型，然后是能源+类型，最后是仅类型
+                type_contents = []
+                
+                # 1. 尝试匹配：类型 + 地区 + 能源
+                if region_tags and energy_type_tags:
+                    type_contents = await content_service.get_content_by_tags(
+                        basic_info_tags=[content_type],
+                        region_tags=region_tags,
+                        energy_type_tags=energy_type_tags,
+                        limit=items_per_type
+                    )
+                    logger.info(f"  📄 {content_type} (地区+能源): {len(type_contents)}条")
+                
+                # 2. 如果没有结果，尝试匹配：类型 + 能源
+                if not type_contents and energy_type_tags:
+                    type_contents = await content_service.get_content_by_tags(
+                        basic_info_tags=[content_type],
+                        energy_type_tags=energy_type_tags,
+                        limit=items_per_type
+                    )
+                    logger.info(f"  📄 {content_type} (仅能源): {len(type_contents)}条")
+                
+                # 3. 如果还没有结果，尝试匹配：类型 + 地区
+                if not type_contents and region_tags:
+                    type_contents = await content_service.get_content_by_tags(
+                        basic_info_tags=[content_type],
+                        region_tags=region_tags,
+                        limit=items_per_type
+                    )
+                    logger.info(f"  📄 {content_type} (仅地区): {len(type_contents)}条")
+                
+                # 4. 如果仍然没有结果，只按类型查询
+                if not type_contents:
+                    type_contents = await content_service.get_content_by_tags(
+                        basic_info_tags=[content_type],
+                        limit=items_per_type
+                    )
+                    logger.info(f"  📄 {content_type} (仅类型): {len(type_contents)}条")
+                
                 diverse_contents.extend(type_contents)
-                logger.info(f"  📄 {content_type}: {len(type_contents)}条")
             
             # 如果还没达到限制数量，补充最新内容
             if len(diverse_contents) < limit:

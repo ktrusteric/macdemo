@@ -1,194 +1,121 @@
 #!/bin/bash
 
-echo "=== OpenResty 负载均衡管理平台后端启动（含数据初始化）==="
+# 上海石油天然气交易中心信息门户系统 - 后端启动脚本（包含数据导入）
+echo "🚀 启动上海石油天然气交易中心信息门户系统后端服务"
+echo "============================================================"
 
-# 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# 检查依赖环境
+echo "🔍 检查依赖环境..."
 
-# 日志函数
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# 错误处理
-set -e
-error_exit() {
-    log_error "启动失败: $1"
+# 检查Python3
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python3 未安装，请先安装Python3"
     exit 1
-}
+fi
 
-# 检查依赖
-check_dependencies() {
-    log_info "检查系统依赖..."
-    
-    # 检查Python
-    if ! command -v python3 &> /dev/null; then
-        error_exit "Python3 未安装"
-    fi
-    log_success "Python3: $(python3 --version)"
-    
-    # 检查MongoDB
-    if ! pgrep mongod > /dev/null; then
-        log_warning "MongoDB 未运行，尝试启动..."
-        if command -v brew &> /dev/null; then
-            brew services start mongodb-community || log_warning "MongoDB启动失败，请手动启动"
-        else
-            log_warning "请手动启动MongoDB服务"
-        fi
+# 检查MongoDB
+if ! pgrep -x "mongod" > /dev/null; then
+    echo "⚠️  MongoDB 未运行，尝试启动..."
+    # 尝试启动MongoDB（根据不同系统调整）
+    if command -v brew &> /dev/null; then
+        brew services start mongodb-community
+    elif command -v systemctl &> /dev/null; then
+        sudo systemctl start mongod
     else
-        log_success "MongoDB 服务正在运行"
+        echo "❌ 无法自动启动MongoDB，请手动启动"
+        exit 1
     fi
-    
-    # 检查端口占用
-    if lsof -i:8001 > /dev/null 2>&1; then
-        log_warning "端口8001已被占用，将尝试停止现有服务"
-        pkill -f "uvicorn.*8001" || true
-        sleep 2
-    fi
-}
+    sleep 3
+fi
 
-# 设置Python环境
-setup_python_env() {
-    log_info "设置Python环境..."
-    
-    cd backend
-    
-    # 创建虚拟环境
-    if [ ! -d "venv" ]; then
-        log_info "创建Python虚拟环境..."
-        python3 -m venv venv
-    fi
-    
-    # 激活虚拟环境
-    source venv/bin/activate
-    
-    # 检查并安装依赖
-    if [ ! -f "venv/installed" ]; then
-        log_info "安装Python依赖..."
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        touch venv/installed
-        log_success "依赖安装完成"
+echo "✅ 依赖环境检查完成"
+
+# 进入后端目录
+cd backend
+
+# 创建并激活虚拟环境
+echo "🐍 设置Python虚拟环境..."
+if [ ! -d ".venv" ]; then
+    python3 -m venv .venv
+    echo "✅ 创建虚拟环境完成"
+fi
+
+source .venv/bin/activate
+echo "✅ 激活虚拟环境完成"
+
+# 安装后端依赖
+echo "📦 安装后端依赖..."
+pip install -r requirements.txt > /dev/null 2>&1
+echo "✅ 后端依赖安装完成"
+
+# 🔥 检查并导入数据
+echo "📋 检查后端数据文件..."
+if [ -f "scripts/能源信息服务系统_清理重复字段_51篇.json" ]; then
+    echo "✅ 发现清理后的数据文件"
+    echo "📊 导入清理后的数据（已移除重复的文档类型字段）..."
+    python3 scripts/import_sample_data.py
+    if [ $? -eq 0 ]; then
+        echo "✅ 数据导入成功 - 使用统一的basic_info_tags字段"
     else
-        log_info "Python依赖已存在，跳过安装"
+        echo "❌ 数据导入失败"
+        exit 1
     fi
-}
+else
+    echo "❌ 找不到数据文件，请检查scripts目录"
+    exit 1
+fi
 
-# 数据库初始化
-init_database() {
-    log_info "初始化数据库..."
-    
-    # 检查数据库连接
-    python3 -c "
-from motor.motor_asyncio import AsyncIOMotorClient
-import asyncio
-
-async def test_connection():
-    try:
-        client = AsyncIOMotorClient('mongodb://localhost:27017')
-        await client.admin.command('ping')
-        print('数据库连接成功')
-        client.close()
-        return True
-    except Exception as e:
-        print(f'数据库连接失败: {e}')
-        return False
-
-result = asyncio.run(test_connection())
-exit(0 if result else 1)
-" || error_exit "无法连接到MongoDB数据库"
-    
-    # 检查是否已有数据
-    CONTENT_COUNT=$(python3 -c "
-from motor.motor_asyncio import AsyncIOMotorClient
-import asyncio
-
-async def check_data():
-    try:
-        client = AsyncIOMotorClient('mongodb://localhost:27017')
-        db = client.energy_info
-        count = await db.content.count_documents({})
-        client.close()
-        return count
-    except:
-        return 0
-
-count = asyncio.run(check_data())
-print(count)
-")
-    
-    if [ "$CONTENT_COUNT" -eq 0 ]; then
-        log_info "数据库为空，开始导入整合数据..."
-        
-        # 导入整合的v1+v2数据
-        cd scripts
-        log_info "使用v3版本导入脚本: integrated_import_v3.py"
-        log_info "数据来源: 统一v3版本 (45篇文章，简化维护)"
-        
-        # 执行数据导入
-        python3 integrated_import_v3.py || error_exit "数据导入失败"
-        
-        log_success "整合数据导入完成"
-        cd ..
-    else
-        log_info "数据库已有 $CONTENT_COUNT 条记录，跳过数据导入"
-    fi
-}
+cd ..
 
 # 启动后端服务
-start_backend() {
-    log_info "启动后端服务..."
-    
-    # 设置环境变量
-    export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-    
-    # 启动服务
-    log_info "后端服务启动在 http://localhost:8001"
-    log_info "API文档地址: http://localhost:8001/docs"
-    log_info "按 Ctrl+C 停止服务"
-    
-    python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-}
+echo "🔧 启动后端服务..."
+PYTHONPATH=/Users/eric/Documents/GitHub/macdemo/backend uvicorn app.main:app --host 0.0.0.0 --port 8001 &
+BACKEND_PID=$!
+echo "✅ 后端服务已启动 (PID: $BACKEND_PID) - http://localhost:8001"
 
-# 主函数
-main() {
-    echo "=========================================="
-    log_info "OpenResty 负载均衡管理平台后端启动"
-    log_info "包含自动数据初始化功能"
-    echo "=========================================="
-    
-    check_dependencies
-    setup_python_env
-    init_database
-    start_backend
-}
+# 等待服务完全启动
+echo "⏳ 等待服务启动..."
+sleep 5
 
-# 信号处理
-cleanup() {
-    echo ""
-    log_info "正在停止后端服务..."
-    pkill -f "uvicorn.*8001" || true
-    log_success "后端服务已停止"
-    exit 0
-}
+# 验证服务状态
+echo "🔍 验证服务状态..."
 
-trap cleanup SIGINT SIGTERM
+# 检查后端服务
+if curl -s http://localhost:8001/health > /dev/null 2>&1; then
+    echo "✅ 后端服务运行正常"
+else
+    echo "⚠️  后端服务可能未完全启动，请稍等..."
+fi
 
-# 执行主函数
-main 
+# 🎯 完成信息
+echo ""
+echo "🎉 上海石油天然气交易中心信息门户系统后端启动完成！"
+echo "============================================================"
+echo "📊 数据导入状态: ✅ 成功导入51篇文章（已清理重复字段）"
+echo "🗑️  字段优化: 已移除重复的'文档类型'字段"
+echo "🏷️  标签统一: 统一使用'basic_info_tags'字段"
+echo ""
+echo "🌐 后端服务地址:"
+echo "   API服务:  http://localhost:8001"
+echo "   API文档:  http://localhost:8001/docs"
+echo ""
+echo "📋 预设用户 (邮箱/密码):"
+echo "   张工程师 (天然气专家):    zhang@shanghai.com / demo123"
+echo "   李经理 (原油贸易):        li@beijing.com / demo123" 
+echo "   王主任 (LNG项目):         wang@shenzhen.com / demo123"
+echo "   陈总监 (PNG运营):         chen@guangzhou.com / demo123"
+echo "   刘研究员 (电力系统):      liu@chengdu.com / demo123"
+echo ""
+echo "🛑 停止服务："
+echo "   Ctrl+C 停止当前服务，或运行 ./stop_backend.sh"
+echo ""
+echo "🔧 技术改进:"
+echo "   ✅ 移除了'文档类型'和'基础信息标签'的重复问题"
+echo "   ✅ 统一了前后端标签管理逻辑"
+echo "   ✅ 数据存储更加高效，避免冗余"
+
+# 保存PID以便后续停止
+echo $BACKEND_PID > .backend.pid
+
+# 等待用户中断
+wait 

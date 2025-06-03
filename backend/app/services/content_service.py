@@ -3,6 +3,9 @@ from pymongo.database import Database
 from bson import ObjectId
 from app.models.content import Content, ContentType
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ContentService:
     def __init__(self, database: Database):
@@ -22,17 +25,132 @@ class ContentService:
         except Exception as e:
             raise Exception(f"Failed to create content: {str(e)}")
 
+    def _map_document_to_content(self, document: dict) -> Content:
+        """将数据库文档映射为Content对象（支持中英文字段）"""
+        try:
+            # 智能字段映射：优先使用英文字段，如果不存在则使用中文字段
+            mapped_doc = {
+                "id": str(document["_id"]),
+                
+                # 标题字段 - 优先英文，后备中文
+                "title": document.get("title") or document.get("标题", "无标题"),
+                
+                # 内容字段 - 优先英文，后备中文
+                "content": document.get("content") or document.get("文章内容", "无内容"),
+                
+                # 来源字段 - 优先英文，后备中文
+                "source": document.get("source") or document.get("来源机构", "未知来源"),
+                
+                # 链接字段 - 优先英文，后备中文
+                "link": document.get("link") or document.get("链接", ""),
+                
+                # 发布时间 - 优先英文，后备中文，最后默认当前时间
+                "publish_time": self._parse_publish_time(document),
+                
+                # 处理文档类型映射 - 优先英文，后备中文
+                "type": document.get("type") or self._map_document_type(document.get("文档类型", "行业资讯")),
+                
+                # 标签字段（都是英文字段名）
+                "basic_info_tags": self._ensure_list(document.get("basic_info_tags", [])),
+                "region_tags": self._ensure_list(document.get("region_tags", [])),
+                "energy_type_tags": self._ensure_list(document.get("energy_type_tags", [])),
+                "business_field_tags": self._ensure_list(document.get("business_field_tags", [])),
+                "beneficiary_tags": self._ensure_list(document.get("beneficiary_tags", [])),
+                "policy_measure_tags": self._ensure_list(document.get("policy_measure_tags", [])),
+                "importance_tags": self._ensure_list(document.get("importance_tags", [])),
+                
+                # 时间字段 - 优先英文，后备中文
+                "created_at": self._parse_datetime(document.get("created_at") or document.get("导入时间")),
+                "updated_at": self._parse_datetime(document.get("updated_at") or document.get("导入时间")),
+                "view_count": max(0, int(document.get("view_count", 0)))  # 确保非负数
+            }
+            
+            return Content(**mapped_doc)
+            
+        except Exception as e:
+            error_msg = f"Failed to map document to content: {str(e)}"
+            logger.error(f"{error_msg} - Document ID: {document.get('_id', 'Unknown')}")
+            raise Exception(error_msg)
+    
+    def _parse_publish_time(self, document: dict) -> datetime:
+        """解析发布时间字段"""
+        # 尝试多个时间字段
+        time_candidates = [
+            document.get("publish_time"),
+            document.get("发布时间"),
+            document.get("发布日期"),
+            document.get("created_at"),
+            document.get("导入时间")
+        ]
+        
+        for time_value in time_candidates:
+            if time_value:
+                parsed_time = self._parse_datetime(time_value)
+                if parsed_time:
+                    return parsed_time
+        
+        # 所有解析都失败，返回当前时间
+        return datetime.utcnow()
+    
+    def _parse_datetime(self, time_value) -> datetime:
+        """解析datetime字段"""
+        if not time_value:
+            return datetime.utcnow()
+        
+        if isinstance(time_value, datetime):
+            return time_value
+        
+        if isinstance(time_value, str):
+            try:
+                # 尝试标准日期格式 YYYY-MM-DD
+                return datetime.strptime(time_value, "%Y-%m-%d")
+            except ValueError:
+                try:
+                    # 尝试ISO格式解析
+                    return datetime.fromisoformat(time_value.replace('Z', '+00:00'))
+                except ValueError:
+                    try:
+                        # 尝试其他常见格式
+                        return datetime.strptime(time_value[:19], "%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        logger.warning(f"无法解析时间格式: {time_value}")
+                        return datetime.utcnow()
+        
+        return datetime.utcnow()
+    
+    def _ensure_list(self, value) -> list:
+        """确保值是列表格式"""
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if item and str(item).strip()]
+        if isinstance(value, str):
+            return [value.strip()] if value.strip() else []
+        try:
+            # 尝试转换为字符串再包装为列表
+            return [str(value).strip()] if str(value).strip() else []
+        except:
+            return []
+
+    def _map_document_type(self, chinese_type: str) -> str:
+        """将中文文档类型映射为英文类型"""
+        type_mapping = {
+            "政策法规": "policy",
+            "行业资讯": "news", 
+            "调价公告": "price",
+            "交易公告": "announcement"
+        }
+        return type_mapping.get(chinese_type, "news")
+
     async def get_content_by_id(self, content_id: str) -> Optional[Content]:
-        """通过ID获取内容"""
+        """根据ID获取内容"""
         try:
             document = await self.collection.find_one({"_id": ObjectId(content_id)})
-            if not document:
-                return None
-            
-            document['id'] = str(document['_id'])
-            return Content(**document)
+            if document:
+                return self._map_document_to_content(document)
+            return None
         except Exception as e:
-            raise Exception(f"Failed to get content: {str(e)}")
+            raise Exception(f"Failed to get content by id: {str(e)}")
 
     async def get_content_list(
         self,
@@ -44,72 +162,50 @@ class ContentService:
     ) -> List[Content]:
         """获取内容列表"""
         try:
+            # 构建查询条件
             query = {}
             
+            # 内容类型筛选（使用basic_info_tags字段）
             if content_type:
-                query["type"] = content_type
+                # 将英文类型映射到中文标签进行查询
+                reverse_type_mapping = {
+                    "policy": "政策法规",
+                    "news": "行业资讯",
+                    "price": "调价公告", 
+                    "announcement": "交易公告"
+                }
+                chinese_type = reverse_type_mapping.get(content_type, content_type)
+                query["basic_info_tags"] = chinese_type
             
-            # 构建标签查询
+            # 标签筛选
             if tags:
-                tag_queries = []
-                for tag in tags:
-                    tag_queries.extend([
-                        {"basic_info_tags": tag},
-                        {"region_tags": tag},
-                        {"energy_type_tags": tag},
-                        {"business_field_tags": tag},
-                        {"beneficiary_tags": tag},
-                        {"policy_measure_tags": tag},
-                        {"importance_tags": tag}
-                    ])
-                query["$or"] = tag_queries
+                tag_conditions = []
+                tag_fields = [
+                    'basic_info_tags', 'region_tags', 'energy_type_tags',
+                    'business_field_tags', 'beneficiary_tags', 
+                    'policy_measure_tags', 'importance_tags'
+                ]
+                
+                for field in tag_fields:
+                    tag_conditions.append({field: {"$in": tags}})
+                
+                if tag_conditions:
+                    query["$or"] = tag_conditions
             
-            # 构建排序条件
-            sort_conditions = {
-                "latest": [("publish_time", -1)],
-                "popularity": [("view_count", -1), ("publish_time", -1)],
-                "relevance": [("publish_time", -1)]  # 默认按时间排序，相关性由推荐算法处理
-            }
-            sort_condition = sort_conditions.get(sort_by, [("publish_time", -1)])
+            # 排序设置
+            sort_field = "导入时间" if sort_by == "latest" else "发布时间"
+            sort_order = -1  # 降序
             
             contents = []
-            
-            # 添加分类统计日志
-            if not content_type and not tags:  # 只在获取全部内容时统计
-                print("📊 内容分类统计:")
-                
-                # 按type字段统计
-                type_stats = {}
-                basic_info_stats = {}
-                
-                async for doc in self.collection.find({}):
-                    doc_type = doc.get('type')
-                    basic_info_tags = doc.get('basic_info_tags', [])
-                    
-                    # 统计type
-                    if doc_type:
-                        type_stats[doc_type] = type_stats.get(doc_type, 0) + 1
-                    
-                    # 统计basic_info_tags
-                    for tag in basic_info_tags:
-                        basic_info_stats[tag] = basic_info_stats.get(tag, 0) + 1
-                
-                print(f"  📈 行情咨询 (行业资讯): {basic_info_stats.get('行业资讯', 0)}篇")
-                print(f"  📋 政策法规 (政策法规): {basic_info_stats.get('政策法规', 0)}篇")
-                print(f"  📢 交易公告 (交易公告): {basic_info_stats.get('交易公告', 0)}篇")
-                print(f"  💰 调价公告 (调价公告): {basic_info_stats.get('调价公告', 0)}篇")
-                print(f"  📊 总公告数: {basic_info_stats.get('交易公告', 0) + basic_info_stats.get('调价公告', 0)}篇")
-                print(f"  📚 总文章数: {sum(type_stats.values())}篇")
-                print(f"  🏷️ 按type统计: {type_stats}")
-            
-            cursor = self.collection.find(query).sort(sort_condition).skip(skip).limit(limit)
+            cursor = self.collection.find(query).sort([(sort_field, sort_order)]).skip(skip).limit(limit)
             
             async for document in cursor:
-                # 正确处理 MongoDB ObjectId
-                if '_id' in document:
-                    document['id'] = str(document['_id'])
-                    del document['_id']  # 删除原始的 _id 字段
-                contents.append(Content(**document))
+                try:
+                    content = self._map_document_to_content(document)
+                    contents.append(content)
+                except Exception as e:
+                    logger.warning(f"跳过无效文档 {document.get('_id')}: {str(e)}")
+                    continue
             
             return contents
         except Exception as e:
@@ -225,14 +321,21 @@ class ContentService:
         try:
             query = {
                 "$or": [
-                    {"title": {"$regex": keyword, "$options": "i"}},
-                    {"content": {"$regex": keyword, "$options": "i"}}
+                    {"标题": {"$regex": keyword, "$options": "i"}},
+                    {"文章内容": {"$regex": keyword, "$options": "i"}}
                 ]
             }
             
             # 添加内容类型筛选
             if content_type:
-                query["type"] = content_type
+                reverse_type_mapping = {
+                    "policy": "政策法规",
+                    "news": "行业资讯",
+                    "price": "调价公告", 
+                    "announcement": "交易公告"
+                }
+                chinese_type = reverse_type_mapping.get(content_type, content_type)
+                query["basic_info_tags"] = chinese_type
             
             # 添加标签筛选
             if tags:
@@ -250,14 +353,15 @@ class ContentService:
                 query = {"$and": [query, {"$or": tag_queries}]}
             
             contents = []
-            cursor = self.collection.find(query).sort([("publish_time", -1)]).skip(skip).limit(limit)
+            cursor = self.collection.find(query).sort([("发布时间", -1)]).skip(skip).limit(limit)
             
             async for document in cursor:
-                # 正确处理 MongoDB ObjectId
-                if '_id' in document:
-                    document['id'] = str(document['_id'])
-                    del document['_id']  # 删除原始的 _id 字段
-                contents.append(Content(**document))
+                try:
+                    content = self._map_document_to_content(document)
+                    contents.append(content)
+                except Exception as e:
+                    logger.warning(f"跳过无效文档 {document.get('_id')}: {str(e)}")
+                    continue
             
             return contents
         except Exception as e:
@@ -302,18 +406,19 @@ class ContentService:
                         }
                     }
                 },
-                {"$sort": {"match_score": -1, "publish_time": -1}},
+                {"$sort": {"match_score": -1, "发布时间": -1}},
                 {"$skip": skip},
                 {"$limit": limit}
             ]
             
             contents = []
             async for document in self.collection.aggregate(pipeline):
-                # 正确处理 MongoDB ObjectId
-                if '_id' in document:
-                    document['id'] = str(document['_id'])
-                    del document['_id']  # 删除原始的 _id 字段
-                contents.append(Content(**document))
+                try:
+                    content = self._map_document_to_content(document)
+                    contents.append(content)
+                except Exception as e:
+                    logger.warning(f"跳过无效文档 {document.get('_id')}: {str(e)}")
+                    continue
             
             return contents
         except Exception as e:
@@ -332,7 +437,7 @@ class ContentService:
     ) -> List[Content]:
         """根据分类标签获取内容"""
         try:
-            # 构建查询条件
+            # 构建查询条件 - 使用$and确保所有指定的标签都匹配
             tag_conditions = []
             
             if basic_info_tags:
@@ -354,18 +459,22 @@ class ContentService:
                 # 如果没有标签条件，返回最新内容
                 return await self.get_content_list(limit=limit, sort_by="latest")
             
-            # 使用$or查询匹配任一标签
-            query = {"$or": tag_conditions}
+            # 使用$and查询确保所有指定标签都匹配
+            if len(tag_conditions) == 1:
+                query = tag_conditions[0]
+            else:
+                query = {"$and": tag_conditions}
             
             contents = []
-            cursor = self.collection.find(query).sort([("publish_time", -1)]).limit(limit)
+            cursor = self.collection.find(query).sort([("发布时间", -1)]).limit(limit)
             
             async for document in cursor:
-                # 正确处理 MongoDB ObjectId
-                if '_id' in document:
-                    document['id'] = str(document['_id'])
-                    del document['_id']  # 删除原始的 _id 字段
-                contents.append(Content(**document))
+                try:
+                    content = self._map_document_to_content(document)
+                    contents.append(content)
+                except Exception as e:
+                    logger.warning(f"跳过无效文档 {document.get('_id')}: {str(e)}")
+                    continue
             
             return contents
         except Exception as e:

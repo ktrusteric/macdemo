@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .info {
+            background: #bee3f8;
+            color: #2b6cb0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .link-button {
+            display: inline-block;
+            background: #4299e1;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin: 10px 5px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .link-button:hover {
+            background: #3182ce;
+        }
+        .fix-summary {
+            background: #f7fafc;
+            border-left: 4px solid #4299e1;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 管理员登录修复验证</h1>
+        <p>验证管理员登录问题是否已解决</p>
+        
+        <div class="fix-summary">
+            <h3>🛠️ 修复内容</h3>
+            <ul>
+                <li>✅ 添加了Vite代理配置 (/api → http://localhost:8001)</li>
+                <li>✅ 增强了AdminLogin.vue页面的调试功能</li>
+                <li>✅ 确认axios依赖已正确安装</li>
+                <li>✅ 确认后端API正常工作</li>
+                <li>✅ 重启了前端服务使配置生效</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <strong>🔐 内置管理员账户:</strong><br>
+            <strong>主管理员:</strong> admin / admin123456<br>
+            <strong>超级管理员:</strong> superadmin / super123456
+        </div>
+        
+        <div class="info">
+            <strong>🌐 服务地址:</strong><br>
+            前端服务: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a> 或 <a href="http://localhost:5174" target="_blank">http://localhost:5174</a><br>
+            后端服务: <a href="http://localhost:8001" target="_blank">http://localhost:8001</a><br>
+            API文档: <a href="http://localhost:8001/docs" target="_blank">http://localhost:8001/docs</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎯 测试步骤</h2>
+        
+        <div class="info">
+            <strong>步骤1: 访问管理员登录页面</strong><br>
+            点击下方链接访问管理员登录页面，查看是否正常加载
+        </div>
+        
+        <a href="http://localhost:5173/admin/login" target="_blank" class="link-button">
+            🔗 访问管理员登录页面 (5173)
+        </a>
+        
+        <a href="http://localhost:5174/admin/login" target="_blank" class="link-button">
+            🔗 访问管理员登录页面 (5174)
+        </a>
+        
+        <div class="info">
+            <strong>步骤2: 测试登录功能</strong><br>
+            在登录页面中：
+            <ol>
+                <li>查看页面是否显示调试日志</li>
+                <li>点击"检查系统状态"按钮</li>
+                <li>使用"快速登录"按钮测试</li>
+                <li>或手动输入账户信息登录</li>
+            </ol>
+        </div>
+        
+        <div class="info">
+            <strong>步骤3: 验证管理功能</strong><br>
+            登录成功后应该能够：
+            <ol>
+                <li>跳转到管理员仪表板</li>
+                <li>查看系统统计数据</li>
+                <li>访问文章管理功能</li>
+                <li>访问用户管理功能</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🔍 问题诊断工具</h2>
+        
+        <div class="info">
+            如果仍有问题，可以使用以下诊断工具：
+        </div>
+        
+        <a href="http://localhost:8001/test_admin_login_debug.html" target="_blank" class="link-button">
+            🛠️ 详细调试工具
+        </a>
+        
+        <a href="http://localhost:8001/test_admin_access.html" target="_blank" class="link-button">
+            🔧 基础API测试
+        </a>
+    </div>
+
+    <div class="container">
+        <h2>📊 预期结果</h2>
+        
+        <div class="success">
+            ✅ 如果修复成功，您应该能够：
+            <ul>
+                <li>正常访问管理员登录页面</li>
+                <li>看到详细的调试日志输出</li>
+                <li>成功登录管理员账户</li>
+                <li>跳转到管理员仪表板</li>
+                <li>使用所有管理功能</li>
+            </ul>
+        </div>
+        
+        <div class="error">
+            ❌ 如果仍有问题，请检查：
+            <ul>
+                <li>前端服务是否重启完成</li>
+                <li>浏览器控制台是否有错误信息</li>
+                <li>网络连接是否正常</li>
+                <li>后端服务是否正常运行</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时自动检查服务状态
+        window.onload = function() {
+            console.log('🚀 管理员登录修复验证页面已加载');
+            console.log('🔧 主要修复: 添加了Vite代理配置');
+            console.log('📝 测试账户: admin/admin123456 或 superadmin/super123456');
+            
+            // 检查前端服务状态
+            checkFrontendStatus();
+        };
+        
+        async function checkFrontendStatus() {
+            try {
+                const response = await fetch('http://localhost:5173');
+                if (response.ok) {
+                    console.log('✅ 前端服务5173正常');
+                }
+            } catch (error) {
+                console.log('❌ 前端服务5173异常:', error.message);
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5174');
+                if (response.ok) {
+                    console.log('✅ 前端服务5174正常');
+                }
+            } catch (error) {
+                console.log('❌ 前端服务5174异常:', error.message);
+            }
+        }
+    </script>
+</body>
+</html> 

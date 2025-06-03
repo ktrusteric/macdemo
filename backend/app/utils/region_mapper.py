@@ -620,8 +620,18 @@ class RegionMapper:
     
     @classmethod
     def get_region_by_city(cls, city: str) -> Optional[str]:
-        """根据城市获取区域代码"""
-        return cls.CITY_TO_REGION.get(city)
+        """根据城市获取区域代码（优先使用直接映射，否则通过省份映射）"""
+        # 首先尝试直接映射
+        direct_region = cls.CITY_TO_REGION.get(city)
+        if direct_region:
+            return direct_region
+        
+        # 如果直接映射不存在，通过省份映射获取
+        province_code = cls.get_province_by_city(city)
+        if province_code:
+            return cls.get_region_by_province(province_code)
+        
+        return None
     
     @classmethod
     def get_region_by_province(cls, province_code: str) -> Optional[str]:

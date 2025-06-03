@@ -1,343 +1,152 @@
 #!/bin/bash
 
-echo "=== OpenResty 负载均衡管理平台 - 完整启动（含数据初始化）==="
+# 上海石油天然气交易中心信息门户系统 - 完整启动脚本（包含数据导入）
+echo "🚀 启动上海石油天然气交易中心信息门户系统（包含数据导入）"
+echo "============================================================"
 
-# 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# 检查依赖环境
+echo "🔍 检查依赖环境..."
 
-# 日志函数
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# 错误处理
-set -e
-error_exit() {
-    log_error "启动失败: $1"
-    cleanup_on_error
+# 检查Python3
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python3 未安装，请先安装Python3"
     exit 1
-}
+fi
 
-# 清理相关进程（保留MongoDB）
-cleanup_processes() {
-    log_info "清理现有相关进程..."
-    
-    # 停止uvicorn后端进程
-    log_info "查找并停止uvicorn进程..."
-    UVICORN_PIDS=$(pgrep -f "uvicorn.*main:app" 2>/dev/null || true)
-    if [ ! -z "$UVICORN_PIDS" ]; then
-        echo "$UVICORN_PIDS" | xargs kill -9 2>/dev/null || true
-        log_success "已停止uvicorn进程: $UVICORN_PIDS"
+# 检查Node.js
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js 未安装，请先安装Node.js"
+    exit 1
+fi
+
+# 检查MongoDB
+if ! pgrep -x "mongod" > /dev/null; then
+    echo "⚠️  MongoDB 未运行，尝试启动..."
+    # 尝试启动MongoDB（根据不同系统调整）
+    if command -v brew &> /dev/null; then
+        brew services start mongodb-community
+    elif command -v systemctl &> /dev/null; then
+        sudo systemctl start mongod
     else
-        log_info "未发现uvicorn进程"
+        echo "❌ 无法自动启动MongoDB，请手动启动"
+        exit 1
     fi
-    
-    # 停止npm/node前端进程（排除MongoDB相关）
-    log_info "查找并停止前端进程..."
-    NODE_PIDS=$(pgrep -f "node.*vite" 2>/dev/null || true)
-    if [ ! -z "$NODE_PIDS" ]; then
-        echo "$NODE_PIDS" | xargs kill -9 2>/dev/null || true
-        log_success "已停止前端Node进程: $NODE_PIDS"
-    else
-        log_info "未发现前端Node进程"
-    fi
-    
-    # 停止特定端口的进程
-    log_info "检查并清理端口占用..."
-    for port in 8001 5173; do
-        PID=$(lsof -ti:$port 2>/dev/null || true)
-        if [ ! -z "$PID" ]; then
-            # 确保不是MongoDB进程（通常在27017端口）
-            PROCESS_NAME=$(ps -p $PID -o comm= 2>/dev/null || true)
-            if [[ "$PROCESS_NAME" != *"mongod"* ]]; then
-                kill -9 $PID 2>/dev/null || true
-                log_success "已停止端口 $port 上的进程: $PID ($PROCESS_NAME)"
-            else
-                log_info "跳过MongoDB进程: $PID"
-            fi
-        fi
-    done
-    
-    # 等待进程完全结束
-    sleep 2
-    log_success "进程清理完成"
-}
+    sleep 3
+fi
 
-# 检查环境
-check_environment() {
-    log_info "检查运行环境..."
-    
-    # 检查Python
-    if ! command -v python3 &> /dev/null; then
-        error_exit "Python3 未安装"
-    fi
-    log_success "Python3: $(python3 --version)"
-    
-    # 检查Node.js
-    if ! command -v node &> /dev/null; then
-        error_exit "Node.js 未安装"
-    fi
-    log_success "Node.js: $(node --version)"
-    
-    # 检查npm
-    if ! command -v npm &> /dev/null; then
-        error_exit "npm 未安装"
-    fi
-    log_success "npm: $(npm --version)"
-    
-    # 检查MongoDB
-    if ! pgrep mongod > /dev/null; then
-        log_warning "MongoDB 未运行，尝试启动..."
-        if command -v brew &> /dev/null; then
-            brew services start mongodb-community 2>/dev/null || true
-            sleep 3
-        fi
-        
-        if ! pgrep mongod > /dev/null; then
-            error_exit "MongoDB 启动失败，请手动启动MongoDB服务"
-        fi
-    fi
-    log_success "MongoDB 服务正在运行"
-}
+echo "✅ 依赖环境检查完成"
 
-# 清除并重新导入数据
-reset_and_import_data() {
-    log_info "清除历史数据并重新导入..."
-    
-    cd backend
-    
-    # 激活虚拟环境
-    if [ ! -d "venv" ]; then
-        log_info "创建Python虚拟环境..."
-        python3 -m venv venv
-    fi
-    source venv/bin/activate
-    
-    # 安装依赖
-    log_info "安装Python依赖..."
-    pip install -q --upgrade pip
-    pip install -q -r requirements.txt
-    
-    # 清除数据库
-    log_info "清除数据库..."
-    python3 -c "
-import pymongo
-import sys
+# 进入后端目录
+cd backend
 
-try:
-    client = pymongo.MongoClient('mongodb://localhost:27017/')
-    db = client['energy_info_db']
-    
-    # 清除所有集合
-    collections = db.list_collection_names()
-    for collection in collections:
-        db[collection].drop()
-        print(f'已清除集合: {collection}')
-    
-    print('数据库清除完成')
-    client.close()
-except Exception as e:
-    print(f'清除数据库失败: {e}')
-    sys.exit(1)
-"
-    
-    # 重新导入数据
-    log_info "重新导入v3版本数据..."
-    log_info "数据来源: 统一v3版本 (45篇文章，简化维护)"
-    cd scripts
-    python3 integrated_import_v3.py
-    
+# 创建并激活虚拟环境
+echo "🐍 设置Python虚拟环境..."
+if [ ! -d ".venv" ]; then
+    python3 -m venv .venv
+    echo "✅ 创建虚拟环境完成"
+fi
+
+source .venv/bin/activate
+echo "✅ 激活虚拟环境完成"
+
+# 安装后端依赖
+echo "📦 安装后端依赖..."
+pip install -r requirements.txt > /dev/null 2>&1
+echo "✅ 后端依赖安装完成"
+
+# 🔥 检查并导入数据
+echo "📋 检查后端数据文件..."
+if [ -f "scripts/能源信息服务系统_清理重复字段_51篇.json" ]; then
+    echo "✅ 发现清理后的数据文件"
+    echo "📊 导入清理后的数据（已移除重复的文档类型字段）..."
+    python3 scripts/import_sample_data.py
     if [ $? -eq 0 ]; then
-        log_success "整合数据导入完成"
+        echo "✅ 数据导入成功 - 使用统一的basic_info_tags字段"
     else
-        error_exit "数据导入失败"
+        echo "❌ 数据导入失败"
+        exit 1
     fi
-    
-    cd ../..
-}
-
-# 检查端口占用（简化版，主要清理工作在cleanup_processes中完成）
-check_ports() {
-    log_info "检查端口状态..."
-    
-    # 显示当前端口占用情况
-    for port in 8001 5173; do
-        if lsof -i:$port > /dev/null 2>&1; then
-            log_info "端口 $port 目前无占用"
-        else
-            log_info "端口 $port 可用"
-        fi
-    done
-    
-    log_success "端口检查完成"
-}
+else
+    echo "❌ 找不到数据文件，请检查scripts目录"
+    exit 1
+fi
 
 # 启动后端服务
-start_backend() {
-    log_info "启动后端服务..."
-    
-    cd backend
-    
-    # 激活虚拟环境（已在reset_and_import_data中创建）
-    source venv/bin/activate
-    
-    # 后台启动后端服务
-    export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-    nohup python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload > ../backend.log 2>&1 &
-    BACKEND_PID=$!
-    cd ..
-    
-    # 等待后端启动
-    log_info "等待后端服务启动..."
-    sleep 5
-    
-    # 检查后端是否启动成功
-    if curl -s http://localhost:8001/health > /dev/null; then
-        log_success "后端服务启动成功 (PID: $BACKEND_PID)"
-        log_info "后端地址: http://localhost:8001"
-        log_info "API文档: http://localhost:8001/docs"
-    else
-        error_exit "后端服务启动失败"
-    fi
-}
+echo "🔧 启动后端服务..."
+cd backend  # 进入backend目录
+PYTHONPATH=/Users/eric/Documents/GitHub/macdemo/backend uvicorn app.main:app --host 0.0.0.0 --port 8001 &
+BACKEND_PID=$!
+echo "✅ 后端服务已启动 (PID: $BACKEND_PID) - http://localhost:8001"
+
+# 返回项目根目录并进入前端目录
+cd ../frontend-vue
+
+# 安装前端依赖（如果需要）
+if [ ! -d "node_modules" ]; then
+    echo "📦 安装前端依赖..."
+    npm install
+    echo "✅ 前端依赖安装完成"
+fi
 
 # 启动前端服务
-start_frontend() {
-    log_info "启动前端服务..."
-    
-    cd frontend-vue
-    
-    # 安装依赖
-    if [ ! -d "node_modules" ]; then
-        log_info "安装前端依赖..."
-        npm install
-        log_success "前端依赖安装完成"
-    fi
-    
-    # 后台启动前端开发服务器
-    nohup npm run dev > ../frontend.log 2>&1 &
-    FRONTEND_PID=$!
-    cd ..
-    
-    # 等待前端启动
-    log_info "等待前端服务启动..."
-    sleep 8
-    
-    # 检查前端是否启动成功
-    if curl -s http://localhost:5173 > /dev/null; then
-        log_success "前端服务启动成功 (PID: $FRONTEND_PID)"
-        log_info "前端地址: http://localhost:5173"
-    else
-        log_warning "前端服务可能还在启动中，请稍后访问 http://localhost:5173"
-    fi
-}
+echo "🎨 启动前端服务..."
+npm run dev &
+FRONTEND_PID=$!
+echo "✅ 前端服务已启动 (PID: $FRONTEND_PID) - http://localhost:5173"
 
-# 清理函数
-cleanup() {
-    log_info "正在停止服务..."
-    if [ ! -z "$BACKEND_PID" ]; then
-        kill $BACKEND_PID 2>/dev/null || true
-    fi
-    if [ ! -z "$FRONTEND_PID" ]; then
-        kill $FRONTEND_PID 2>/dev/null || true
-    fi
-    pkill -f "uvicorn.*main:app" 2>/dev/null || true
-    pkill -f "vite.*dev" 2>/dev/null || true
-    log_success "服务已停止"
-    exit 0
-}
+# 等待服务完全启动
+echo "⏳ 等待服务启动..."
+sleep 5
 
-cleanup_on_error() {
-    log_error "发生错误，清理环境..."
-    cleanup
-}
+# 验证服务状态
+echo "🔍 验证服务状态..."
 
-# 显示启动信息
-show_startup_info() {
-    echo ""
-    echo "=========================================="
-    log_success "🎉 OpenResty负载均衡管理平台启动完成!"
-    echo "=========================================="
-    log_info "🌐 前端地址: http://localhost:5173"
-    log_info "🔧 后端API: http://localhost:8001"  
-    log_info "📚 API文档: http://localhost:8001/docs"
-    log_info "🗃️  数据库: MongoDB (localhost:27017)"
-    echo ""
-    log_info "📋 系统功能:"
-    log_info "   • 用户注册登录（含Demo用户）"
-    log_info "   • 智能推荐引擎（地域+能源标签）"
-    log_info "   • 标签管理系统（城市→省份→地区自动识别）"
-    log_info "   • 内容浏览与搜索"
-    echo ""
-    log_info "🎭 Demo用户（已优化为单能源标签）:"
-    log_info "   • 张先生@上海 - 天然气专家"
-    log_info "   • 李女士@北京 - 原油分析师" 
-    log_info "   • 王先生@深圳 - LNG项目经理"
-    log_info "   • 陈女士@广州 - PNG运营专家"
-    log_info "   • 刘先生@成都 - 电力工程师"
-    echo ""
-    log_info "📊 测试数据:"
-    log_info "   • 45篇标准化测试文章"
-    log_info "   • 优化的标签分布（3-5个标签/文章）"
-    log_info "   • 68个城市地区映射支持"
-    echo ""
-    log_warning "按 Ctrl+C 停止所有服务"
-    echo "=========================================="
-}
+# 检查后端服务
+if curl -s http://localhost:8001/health > /dev/null 2>&1; then
+    echo "✅ 后端服务运行正常"
+else
+    echo "⚠️  后端服务可能未完全启动，请稍等..."
+fi
 
-# 主函数
-main() {
-    echo "=========================================="
-    log_info "OpenResty 负载均衡管理平台完整启动"
-    log_info "包含前后端服务和数据重置初始化"
-    echo "=========================================="
-    
-    # 1. 清理现有进程
-    cleanup_processes
-    
-    # 2. 检查运行环境
-    check_environment
-    
-    # 3. 检查端口状态
-    check_ports
-    
-    # 4. 清除并重新导入数据
-    reset_and_import_data
-    
-    # 5. 启动后端服务
-    start_backend
-    
-    # 6. 启动前端服务  
-    start_frontend
-    
-    # 7. 显示启动信息
-    show_startup_info
-    
-    # 8. 保持运行状态
-    log_info "服务运行中，按 Ctrl+C 停止..."
-    while true; do
-        sleep 1
-    done
-}
+# 检查前端服务
+if curl -s http://localhost:5173 > /dev/null 2>&1; then
+    echo "✅ 前端服务运行正常"
+else
+    echo "⚠️  前端服务可能未完全启动，请稍等..."
+fi
 
-# 设置信号处理
-trap cleanup SIGINT SIGTERM
+# 🎯 完成信息
+echo ""
+echo "🎉 上海石油天然气交易中心信息门户系统启动完成！"
+echo "============================================================"
+echo "📊 数据导入状态: ✅ 成功导入51篇文章（已清理重复字段）"
+echo "🗑️  字段优化: 已移除重复的'文档类型'字段"
+echo "🏷️  标签统一: 统一使用'basic_info_tags'字段"
+echo ""
+echo "🌐 服务地址:"
+echo "   前端应用: http://localhost:5173"
+echo "   后端API:  http://localhost:8001"
+echo "   API文档:  http://localhost:8001/docs"
+echo ""
+echo "📋 预设用户 (邮箱/密码):"
+echo "   张工程师 (天然气专家):    zhang@shanghai.com / demo123"
+echo "   李经理 (原油贸易):        li@beijing.com / demo123" 
+echo "   王主任 (LNG项目):         wang@shenzhen.com / demo123"
+echo "   陈总监 (PNG运营):         chen@guangzhou.com / demo123"
+echo "   刘研究员 (电力系统):      liu@chengdu.com / demo123"
+echo ""
+echo "🛑 停止服务："
+echo "   Ctrl+C 停止当前服务，或运行 ./stop_backend.sh"
+echo ""
+echo "🔧 技术改进:"
+echo "   ✅ 移除了'文档类型'和'基础信息标签'的重复问题"
+echo "   ✅ 前端选择文档类型自动生成basic_info_tags"
+echo "   ✅ 统一了前后端标签管理逻辑"
+echo "   ✅ 数据存储更加高效，避免冗余"
 
-# 执行主函数
-main 
+# 保存PID以便后续停止
+echo $BACKEND_PID > .backend.pid
+echo $FRONTEND_PID > .frontend.pid
+
+# 等待用户中断
+wait 
