@@ -38,6 +38,10 @@
               <el-icon><i class="el-icon-document"></i></el-icon>
               <span>内容资讯</span>
             </el-menu-item>
+            <el-menu-item index="/favorites">
+              <el-icon><i class="fas fa-heart"></i></el-icon>
+              <span>我的收藏</span>
+            </el-menu-item>
             <el-menu-item index="/market">
               <el-icon><i class="el-icon-data-analysis"></i></el-icon>
               <span>行情信息</span>
@@ -60,6 +64,7 @@
 import { useUserStore } from '@/store/user'
 import { useRouter, useRoute } from 'vue-router'
 import { computed, onMounted } from 'vue'
+// import AIAssistantFloat from '@/components/AIAssistantFloat.vue'
 
 const userStore = useUserStore()
 const router = useRouter()

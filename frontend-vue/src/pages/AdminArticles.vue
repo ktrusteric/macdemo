@@ -314,12 +314,26 @@
             
             <div class="form-group">
               <label>文章内容 *</label>
-              <textarea 
-                v-model="articleForm.content" 
-                placeholder="请输入文章内容"
-                rows="8"
-                required
-              ></textarea>
+              <div class="content-input-group">
+                <textarea 
+                  v-model="articleForm.content" 
+                  placeholder="请输入文章内容"
+                  rows="8"
+                  required
+                ></textarea>
+                <div class="ai-tag-actions">
+                  <button 
+                    type="button" 
+                    @click="generateTagsWithAI" 
+                    :disabled="!articleForm.content.trim() || generatingTags"
+                    class="ai-tag-btn"
+                  >
+                    <span v-if="generatingTags">🤖 AI标签生成中...</span>
+                    <span v-else>🤖 AI标签化</span>
+                  </button>
+                  <small class="ai-hint">输入文章内容后，点击此按钮自动生成标签</small>
+                </div>
+              </div>
             </div>
             
             <div class="form-row">
@@ -339,6 +353,16 @@
                   placeholder="文章来源"
                 />
               </div>
+            </div>
+            
+            <div class="form-group">
+              <label>文章链接 <span class="optional-hint">(可选)</span></label>
+              <input 
+                v-model="articleForm.link" 
+                type="url" 
+                placeholder="https://example.com/article"
+              />
+              <small class="link-hint">添加原文链接，用户可点击标题跳转</small>
             </div>
             
             <!-- 标签编辑区域 -->
@@ -628,6 +652,7 @@ const adminStore = useAdminStore()
 // 响应式数据
 const loading = ref(false)
 const saving = ref(false)
+const generatingTags = ref(false)
 const articles = ref<any[]>([])
 const searchQuery = ref('')
 const selectedType = ref('')
@@ -673,6 +698,7 @@ const articleForm = reactive({
   type: '',
   publish_date: '',
   source: '',
+  link: '',
   basic_info_tags: [] as string[],
   region_tags: [] as string[],
   energy_type_tags: [] as string[],
@@ -776,6 +802,7 @@ const resetForm = () => {
   articleForm.type = ''
   articleForm.publish_date = ''
   articleForm.source = ''
+  articleForm.link = ''
   articleForm.basic_info_tags = []
   articleForm.region_tags = []
   articleForm.energy_type_tags = []
@@ -806,8 +833,15 @@ const editArticle = (article: any) => {
   articleForm.title = article.title
   articleForm.content = article.content
   articleForm.type = article.type
-  articleForm.publish_date = article.publish_date?.split('T')[0] || ''
+  if (article.publish_date) {
+    articleForm.publish_date = article.publish_date
+  } else if (article.publish_time) {
+    articleForm.publish_date = article.publish_time.split('T')[0]
+  } else {
+    articleForm.publish_date = ''
+  }
   articleForm.source = article.source || ''
+  articleForm.link = article.link || ''
   articleForm.basic_info_tags = [...(article.basic_info_tags || [])]
   articleForm.region_tags = [...(article.region_tags || [])]
   articleForm.energy_type_tags = [...(article.energy_type_tags || [])]
@@ -845,6 +879,7 @@ const saveArticle = async () => {
       type: articleForm.type,
       publish_time: articleForm.publish_date ? new Date(articleForm.publish_date).toISOString() : new Date().toISOString(),
       source: articleForm.source || '官方发布',
+      link: articleForm.link || '',
       basic_info_tags: articleForm.basic_info_tags,
       region_tags: articleForm.region_tags,
       energy_type_tags: articleForm.energy_type_tags,
@@ -872,6 +907,49 @@ const saveArticle = async () => {
     alert('❌ 保存文章失败: ' + error.message)
   } finally {
     saving.value = false
+  }
+}
+
+// AI标签生成
+const generateTagsWithAI = async () => {
+  try {
+    if (!articleForm.content.trim()) {
+      alert('请先输入文章内容')
+      return
+    }
+    
+    generatingTags.value = true
+    
+    const response = await api.post('/admin/articles/generate-tags', {
+      content: articleForm.content
+    })
+    
+    if (response.data?.success && response.data?.data) {
+      const tags = response.data.data
+      
+      // 合并AI生成的标签到现有标签（去重）
+      const mergeUniqueTags = (existing: string[], generated: string[]) => {
+        const combined = [...existing, ...generated]
+        return [...new Set(combined)]
+      }
+      
+      articleForm.region_tags = mergeUniqueTags(articleForm.region_tags, tags.region_tags || [])
+      articleForm.energy_type_tags = mergeUniqueTags(articleForm.energy_type_tags, tags.energy_type_tags || [])
+      articleForm.business_field_tags = mergeUniqueTags(articleForm.business_field_tags, tags.business_field_tags || [])
+      articleForm.beneficiary_tags = mergeUniqueTags(articleForm.beneficiary_tags, tags.beneficiary_tags || [])
+      articleForm.policy_measure_tags = mergeUniqueTags(articleForm.policy_measure_tags, tags.policy_measure_tags || [])
+      articleForm.importance_tags = mergeUniqueTags(articleForm.importance_tags, tags.importance_tags || [])
+      
+      alert('🎉 AI标签生成成功！已自动添加到相应标签类别中')
+    } else {
+      alert('❌ AI标签生成失败，请稍后重试')
+    }
+    
+  } catch (error: any) {
+    console.error('AI标签生成失败:', error)
+    alert('❌ AI标签生成失败: ' + (error.response?.data?.detail || error.message))
+  } finally {
+    generatingTags.value = false
   }
 }
 
@@ -1765,5 +1843,82 @@ onMounted(async () => {
 .remove-tag:hover {
   opacity: 1;
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* 新增功能样式 */
+.content-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.content-input-group textarea {
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+}
+
+.ai-tag-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ai-tag-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-tag-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.ai-tag-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ai-tag-btn:active {
+  transform: translateY(0);
+}
+
+.ai-hint {
+  color: #718096;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.link-hint {
+  display: block;
+  margin-top: 4px;
+  color: #718096;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.optional-hint {
+  color: #a0aec0;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.type-hint {
+  color: #a0aec0;
+  font-size: 12px;
+  font-weight: normal;
 }
 </style> 

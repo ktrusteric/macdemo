@@ -114,24 +114,42 @@ def normalize_energy_type_tags(tags):
         if tag in standard_energy_types:
             normalized.append(tag)
         else:
-            # 映射常见的非标准标签
+            # 映射常见的非标准标签 - 与TagProcessor.STANDARD_ENERGY_TYPES完全一致
             tag_lower = tag.lower()
             if "lng" in tag_lower or "液化天然气" in tag:
                 normalized.append("液化天然气(LNG)")
             elif "png" in tag_lower or "管道天然气" in tag:
                 normalized.append("管道天然气(PNG)")
+            elif "lpg" in tag_lower or "液化石油气" in tag:
+                normalized.append("液化石油气(LPG)")
             elif "天然气" in tag and "液化" not in tag and "管道" not in tag:
                 normalized.append("天然气")
             elif "原油" in tag:
                 normalized.append("原油")
+            elif "重烃" in tag:
+                normalized.append("重烃")
             elif "电力" in tag:
                 normalized.append("电力")
             elif "汽油" in tag:
                 normalized.append("汽油")
-            elif "柴油" in tag:
+            elif "柴油" in tag and "生物" not in tag:
                 normalized.append("柴油")
-            elif "煤炭" in tag:
+            elif "生物柴油" in tag:
+                normalized.append("生物柴油")
+            elif "沥青" in tag:
+                normalized.append("沥青")
+            elif "石油焦" in tag:
+                normalized.append("石油焦")
+            elif "煤炭" in tag or "动力煤" in tag or "煤" in tag:
                 normalized.append("煤炭")
+            elif "核能" in tag or "核电" in tag:
+                normalized.append("核能")
+            elif "可再生能源" in tag or ("可再生" in tag and "能源" in tag):
+                normalized.append("可再生能源")
+            elif "生物质能" in tag or ("生物质" in tag and ("能" in tag or "发电" in tag)):
+                normalized.append("生物质能")
+            elif "氢能" in tag or "氢燃料" in tag or "氢气" in tag:
+                normalized.append("氢能")
             # 如果无法映射，保留原标签（但会在后续验证中标记）
             else:
                 normalized.append(tag)
@@ -175,9 +193,32 @@ async def import_articles(use_simplified=True):
                 # 基础字段处理
                 title = article_data.get('标题', f'未知标题_{i}')
                 content = article_data.get('文章内容', '')
-                publish_date = article_data.get('发布日期', '2025-01-01')
+                publish_date_str = article_data.get('发布日期') or article_data.get('发布时间', '2025-01-01')
                 source = article_data.get('来源机构', '未知来源')
                 link = article_data.get('链接', '')
+                
+                # 🔥 正确处理发布时间：将发布日期转换为datetime对象
+                publish_time = None
+                publish_date = None
+                
+                try:
+                    if publish_date_str:
+                        # 如果是YYYY-MM-DD格式，补全时分秒为00:00:00
+                        if len(publish_date_str) == 10 and '-' in publish_date_str:
+                            publish_time = datetime.strptime(publish_date_str + " 00:00:00", "%Y-%m-%d %H:%M:%S")
+                            publish_date = publish_date_str
+                        else:
+                            # 尝试其他格式
+                            publish_time = datetime.fromisoformat(publish_date_str.replace('Z', '+00:00'))
+                            publish_date = publish_time.strftime('%Y-%m-%d')
+                    else:
+                        # 如果没有发布时间，使用当前时间
+                        publish_time = datetime.now()
+                        publish_date = publish_time.strftime('%Y-%m-%d')
+                except Exception as e:
+                    print(f"⚠️ 解析时间失败: {title[:30]} - {publish_date_str} - {str(e)}")
+                    publish_time = datetime.now()
+                    publish_date = publish_time.strftime('%Y-%m-%d')
                 
                 # 🔥 直接使用清理后的basic_info_tags字段
                 basic_info_tags_raw = article_data.get('basic_info_tags', [])
@@ -226,11 +267,12 @@ async def import_articles(use_simplified=True):
                 importance_tags_raw = article_data.get('重要性/影响力标签', [])
                 importance_tags = parse_tag_string(importance_tags_raw) if isinstance(importance_tags_raw, str) else importance_tags_raw
                 
-                # 创建文章文档
+                # 🔥 创建文章文档，同时包含publish_date和publish_time字段
                 article_doc = {
                     "title": title,
                     "content": content,
-                    "publish_date": publish_date,
+                    "publish_date": publish_date,  # 字符串格式的日期
+                    "publish_time": publish_time,  # datetime对象
                     "source": source,
                     "link": link,
                     "type": content_type,  # 🔥 基于basic_info_tags生成
@@ -260,7 +302,7 @@ async def import_articles(use_simplified=True):
                         energy_type_counts[tag] = energy_type_counts.get(tag, 0) + 1
                     
                     if i <= 5:
-                        print(f"✅ 文章 {i}: {title[:30]}...")
+                        print(f"✅ 文章 {i}: {title[:30]}... -> {publish_date}")
                 else:
                     error_count += 1
                     print(f"❌ 文章 {i} 插入失败")
@@ -291,7 +333,7 @@ async def import_articles(use_simplified=True):
         # 🔥 关闭数据库连接
         if client:
             client.close()
-        print(f"\n✅ 数据导入完成！使用清理后的标准化数据")
+        print(f"\n✅ 数据导入完成！使用清理后的标准化数据，publish_time字段已正确设置")
         
     except Exception as e:
         print(f"❌ 导入过程出错: {str(e)}")
@@ -323,9 +365,9 @@ async def create_sample_users():
                 "username": "张工程师",
                 "password": "demo123",
                 "register_city": "上海",
-                "energy_types": ["天然气"],  # 覆盖率最高：42.2% (19篇)
+                "energy_types": ["液化石油气(LPG)"],  # 覆盖率最高：42.2% (19篇)
                 "user_id": "user001",
-                "description": "天然气市场分析师 - 关注天然气价格与政策"
+                "description": "石油与天然气市场分析师 - 关注行业价格与政策"
             },
             {
                 "email": "li@beijing.com", 

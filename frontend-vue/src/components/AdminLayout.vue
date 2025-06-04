@@ -55,7 +55,8 @@ const adminInfo = computed(() => adminStore.adminInfo)
 const menuItems = [
   { path: '/admin/dashboard', name: '仪表盘', icon: '📊' },
   { path: '/admin/articles', name: '内容管理', icon: '📝' },
-  { path: '/admin/users', name: '用户管理', icon: '👥' }
+  { path: '/admin/users', name: '用户管理', icon: '👥' },
+  { path: '/admin/chat-history', name: '聊天记录', icon: '💬' }
 ]
 
 // 处理登出

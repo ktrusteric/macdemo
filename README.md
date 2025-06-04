@@ -33,14 +33,6 @@
 # 或手动停止（Ctrl+C）
 ```
 
-### 数据说明
-
-系统使用规范化的测试数据（`backend/scripts/简化测试数据.json`）：
-- **45篇能源政策文章** - 每篇3-5个标签（优化后）
-- **能源标签覆盖率** - 天然气42.2%，原油42.2%，LNG24.4%，PNG22.2%，电力8.9%
-- **地域标签覆盖率** - 66.7%，支持全国主要城市的省份和地区自动识别
-- **5个Demo用户** - 基于覆盖率优化，每用户专注1个能源类型
-
 ## 📋 系统概述
 
 上海石油天然气交易中心信息门户系统是一个基于个性化标签的能源资讯推荐平台，支持多种能源类型的信息聚合与智能推荐。
@@ -62,87 +54,6 @@ interface Content {
 }
 ```
 
-### 用户标签分类
-
-```typescript
-enum TagCategory {
-  BASIC_INFO = "basic_info",        // 基础信息
-  CITY = "city",                    // 城市
-  PROVINCE = "province",            // 省份
-  REGION = "region",                // 地区
-  ENERGY_TYPE = "energy_type",      // 能源类型
-  BUSINESS_FIELD = "business_field", // 业务领域
-  BENEFICIARY = "beneficiary",      // 受益主体
-  POLICY_MEASURE = "policy_measure", // 政策措施
-  IMPORTANCE = "importance"         // 重要性
-}
-
-enum TagSource {
-  PRESET = "preset",               // 预设标签
-  MANUAL = "manual",              // 手动添加
-  AI_GENERATED = "ai_generated",  // AI生成
-  REGION_AUTO = "region_auto"     // 地区自动生成
-}
-```
-
-## ⚡ 能源类型配置
-
-### 完整能源类型列表 (energyTypes)
-
-```typescript
-const energyTypes = [
-  { value: '原油', label: '原油' },
-  { value: '管道天然气(PNG)', label: '管道天然气(PNG)' },
-  { value: '天然气', label: '天然气' },
-  { value: '液化天然气(LNG)', label: '液化天然气(LNG)' },
-  { value: '液化石油气(LPG)', label: '液化石油气(LPG)' },
-  { value: '汽油', label: '汽油' },
-  { value: '柴油', label: '柴油' },
-  { value: '沥青', label: '沥青' },
-  { value: '石油焦', label: '石油焦' },
-  { value: '生物柴油', label: '生物柴油' },
-  { value: '电力', label: '电力' },
-  { value: '煤炭', label: '煤炭' },
-  { value: '重烃', label: '重烃' },
-];
-```
-
-### 能源类型分组
-
-**传统化石能源**：
-- 原油、汽油、柴油、沥青、石油焦
-
-**天然气类**：
-- 管道天然气(PNG)、天然气、液化天然气(LNG)、液化石油气(LPG)、重烃
-
-**新能源/清洁能源**：
-- 生物柴油、电力
-
-**固体燃料**：
-- 煤炭
-
-## 📄 内容类型映射
-
-### CONTENT_TYPE_MAP
-
-```python
-CONTENT_TYPE_MAP = {
-    "政策法规": ContentType.POLICY,       # 政策法规类
-    "行业资讯": ContentType.NEWS,         # 行业资讯类
-    "调价公告": ContentType.PRICE,        # 价格调整公告
-    "交易公告": ContentType.ANNOUNCEMENT  # 交易相关公告
-}
-```
-
-### ContentType 枚举
-
-```python
-class ContentType(str, Enum):
-    POLICY = "policy"           # 政策法规
-    NEWS = "news"              # 行业资讯  
-    PRICE = "price"            # 调价公告
-    ANNOUNCEMENT = "announcement" # 交易公告
-```
 
 ## 🗺️ 地区标签系统
 
@@ -151,14 +62,6 @@ class ContentType(str, Enum):
 1. **城市级** (权重: 2.5) - 用户明确选择
 2. **省份级** (权重: 2.0) - 系统自动生成
 3. **区域级** (权重: 1.5) - 系统自动生成
-
-### 支持的地区
-
-**华东地区**：上海、杭州、南京、苏州等
-**华北地区**：北京、天津等
-**华南地区**：深圳、广州等
-**西南地区**：成都、重庆等
-**华中地区**：长沙、武汉等
 
 ## 🎯 推荐算法权重配置
 
@@ -225,83 +128,6 @@ final_score = base_score * (
 - **平均标签数**：从15+个优化至3.6个
 - **推荐精度提升**：地域权重+200%，能源类型权重+150%
 
-## 👥 演示用户配置
-
-### 5个预设演示用户（基于能源标签覆盖率优化）
-
-根据当前文章库的能源标签分布，每个用户专注1个能源类型，确保测试更具代表性：
-
-```javascript
-const demoUsers = [
-  {
-    demo_user_id: "user001",
-    username: "张工程师",
-    email: "zhang@shanghai.com", 
-    register_city: "上海",
-    description: "天然气市场分析师 - 关注天然气价格与政策",
-    energy_types: ["天然气"],  // 覆盖率最高：62.7% (32篇文章)
-    expected_articles: 32
-  },
-  {
-    demo_user_id: "user002", 
-    username: "李经理",
-    email: "li@beijing.com",
-    register_city: "北京",
-    description: "石油贸易专家 - 原油进口与价格分析",
-    energy_types: ["原油"],  // 第二高：47.1% (24篇文章)
-    expected_articles: 24
-  },
-  {
-    demo_user_id: "user003",
-    username: "王主任",
-    email: "wang@shenzhen.com", 
-    register_city: "深圳",
-    description: "LNG项目经理 - 液化天然气接收站运营",
-    energy_types: ["液化天然气(LNG)"],  // 第三高：29.4% (15篇文章)
-    expected_articles: 15
-  },
-  {
-    demo_user_id: "user004",
-    username: "陈总监", 
-    email: "chen@guangzhou.com",
-    register_city: "广州",
-    description: "管道天然气运营专家 - 天然气管网建设",
-    energy_types: ["管道天然气(PNG)"],  // 第四高：19.6% (10篇文章)
-    expected_articles: 10
-  },
-  {
-    demo_user_id: "user005",
-    username: "刘研究员",
-    email: "liu@chengdu.com",
-    register_city: "成都", 
-    description: "电力系统研究员 - 可再生能源发电",
-    energy_types: ["电力"],  // 第五高：17.6% (9篇文章)
-    expected_articles: 9
-  }
-];
-```
-
-### 能源标签覆盖率分析
-
-| 能源类型 | 覆盖文章数 | 覆盖率 | 对应用户 |
-|---------|-----------|--------|---------|
-| 天然气 | 32篇 | 62.7% | 张工程师（上海） |
-| 原油 | 24篇 | 47.1% | 李经理（北京） |
-| 液化天然气(LNG) | 15篇 | 29.4% | 王主任（深圳） |
-| 管道天然气(PNG) | 10篇 | 19.6% | 陈总监（广州） |
-| 电力 | 9篇 | 17.6% | 刘研究员（成都） |
-
-### 测试推荐效果验证
-
-**高匹配度场景**：
-- 上海用户 + 天然气：应优先推荐上海天然气相关文章
-- 北京用户 + 原油：应优先推荐北京/国家层面原油政策文章
-- 深圳用户 + LNG：应优先推荐LNG接收站、进口相关文章
-
-**权重验证**：
-- 地域匹配：上海用户优先看到上海市相关文章（权重×3.0）
-- 能源匹配：天然气用户优先看到天然气文章（权重×2.5）
-- 双重匹配：上海+天然气用户获得最高推荐得分
 
 ## 🔧 技术配置
 

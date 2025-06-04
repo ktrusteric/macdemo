@@ -25,12 +25,18 @@ class ContentTag(BaseModel):
     confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
 
 class Content(BaseModel):
-    id: Optional[str] = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    model_config = {
+        "populate_by_name": True,  # 允许使用字段名而不是别名
+        "ser_json_by_alias": False  # 序列化时不使用别名
+    }
+    
+    id: Optional[str] = Field(default_factory=lambda: str(ObjectId()))
     title: str = Field(..., min_length=1, max_length=500)
     content: str = Field(..., min_length=1)
     type: ContentType = ContentType.NEWS
     source: str = Field(default="官方发布", max_length=100)
     publish_time: datetime = Field(default_factory=datetime.utcnow)
+    publish_date: Optional[str] = Field(None, description="发布日期，格式YYYY-MM-DD，用于前端排序")
     tags: List[ContentTag] = Field(default_factory=list)
     link: Optional[str] = None
     

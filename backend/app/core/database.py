@@ -31,6 +31,10 @@ async def close_mongo_connection():
         db_manager.client.close()
         print("MongoDB connection closed")
 
-async def get_database() -> Database:
-    """获取数据库实例"""
+def get_database():
+    """获取数据库实例（同步版本）"""
+    return db_manager.database
+
+async def get_database_async():
+    """获取数据库实例（异步版本）"""
     return db_manager.database 

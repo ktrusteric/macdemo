@@ -143,7 +143,20 @@
                     {{ item.view_count || 0 }}
                   </span>
                 </div>
-                <h3 class="content-title-text">{{ item.title }}</h3>
+                <h3 class="content-title-text">
+                  <a 
+                    v-if="item.link" 
+                    :href="item.link" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="article-link"
+                    @click.stop
+                  >
+                    {{ item.title }}
+                    <el-icon class="external-link-icon"><TopRight /></el-icon>
+                  </a>
+                  <span v-else>{{ item.title }}</span>
+                </h3>
                 <p class="content-summary">{{ item.content || '暂无摘要' }}</p>
                 <div class="content-tags" v-if="getAllTags(item).length">
                   <el-tag 
@@ -164,6 +177,17 @@
                 <el-button type="primary" link @click.stop="viewContent(item)">
                   <el-icon><Reading /></el-icon>
                   阅读全文
+                </el-button>
+                <el-button 
+                  :type="favoriteStates.get(item._id || item.id) ? 'danger' : 'warning'" 
+                  link 
+                  @click.stop="toggleFavorite(item)"
+                  :title="favoriteStates.get(item._id || item.id) ? '取消收藏' : '收藏文章'"
+                >
+                  <el-icon>
+                    <i :class="favoriteStates.get(item._id || item.id) ? 'fas fa-heart' : 'far fa-heart'"></i>
+                  </el-icon>
+                  {{ favoriteStates.get(item._id || item.id) ? '已收藏' : '收藏' }}
                 </el-button>
               </div>
             </div>
@@ -196,10 +220,12 @@ import {
   Search, 
   Refresh, 
   View, 
-  Reading 
+  Reading,
+  TopRight
 } from '@element-plus/icons-vue'
 import api from '@/api/request'
 import { ElMessage } from 'element-plus'
+import { favoritesAPI } from '@/api/favorites'
 
 const route = useRoute()
 const router = useRouter()
@@ -215,6 +241,7 @@ const pageSize = ref(10)
 
 // 内容数据
 const allContent = ref([])
+const favoriteStates = ref(new Map()) // 收藏状态映射
 const stats = ref({
   market: 0,
   policy: 0,
@@ -260,9 +287,9 @@ const filteredContent = computed(() => {
     )
   }
   
-  // 排序
+  // 🔥 修改排序：使用publish_date替代publish_time
   if (sortBy.value === 'latest') {
-    filtered.sort((a, b) => new Date(b.publish_time).getTime() - new Date(a.publish_time).getTime())
+    filtered.sort((a, b) => new Date(b.publish_date || b.publish_time).getTime() - new Date(a.publish_date || a.publish_time).getTime())
   } else if (sortBy.value === 'popularity') {
     filtered.sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
   }
@@ -357,6 +384,9 @@ const loadContent = async () => {
     // 更新统计数据
     updateStats()
     
+    // 加载收藏状态
+    await loadFavoriteStates()
+    
   } catch (error) {
     console.error('❌ 加载内容失败:', error)
     ElMessage.error('加载内容失败')
@@ -408,15 +438,67 @@ const handleSearch = () => {
   currentPage.value = 1
 }
 
-const handlePageChange = () => {
-  // 页面变化时自动滚动到顶部
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+const handlePageChange = (page) => {
+  currentPage.value = page
 }
 
 const viewContent = (item) => {
   console.log('查看内容:', item.title)
   // TODO: 实现内容详情页面跳转
   ElMessage.info('内容详情功能开发中...')
+}
+
+// 收藏相关方法
+const toggleFavorite = async (item) => {
+  const contentId = item._id || item.id
+  const isCurrentlyFavorited = favoriteStates.value.get(contentId)
+  
+  try {
+    if (isCurrentlyFavorited) {
+      // 取消收藏
+      const result = await favoritesAPI.removeFavorite(contentId)
+      if (result.success) {
+        favoriteStates.value.set(contentId, false)
+        ElMessage.success('取消收藏成功')
+      }
+    } else {
+      // 添加收藏
+      const result = await favoritesAPI.addFavorite(contentId)
+      if (result.success) {
+        favoriteStates.value.set(contentId, true)
+        ElMessage.success('收藏成功')
+        
+        // 如果学习到了新标签，显示提示
+        if (result.learned_tags) {
+          const learnedCount = Object.values(result.learned_tags).flat().length
+          if (learnedCount > 0) {
+            ElMessage.info(`已学习 ${learnedCount} 个新标签，将影响您的推荐内容`)
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('收藏操作失败:', error)
+    ElMessage.error('操作失败，请重试')
+  }
+}
+
+const loadFavoriteStates = async () => {
+  // 批量检查收藏状态
+  try {
+    const promises = allContent.value.map(async (item) => {
+      const contentId = item._id || item.id
+      try {
+        const isFavorited = await favoritesAPI.checkFavoriteStatus(contentId)
+        favoriteStates.value.set(contentId, isFavorited)
+      } catch (error) {
+        favoriteStates.value.set(contentId, false)
+      }
+    })
+    await Promise.all(promises)
+  } catch (error) {
+    console.error('加载收藏状态失败:', error)
+  }
 }
 
 // 监听路由参数
@@ -598,6 +680,31 @@ onMounted(() => {
   color: #303133;
   margin: 0 0 8px 0;
   line-height: 1.4;
+}
+
+.article-link {
+  color: #303133;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.article-link:hover {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.external-link-icon {
+  font-size: 14px;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.article-link:hover .external-link-icon {
+  opacity: 1;
+  transform: translateX(2px) translateY(-2px);
 }
 
 .content-summary {

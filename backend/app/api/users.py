@@ -1,17 +1,32 @@
+#!/usr/bin/env python3
+"""
+用户API路由模块
+"""
+import logging
+from datetime import timedelta
+from typing import List, Optional, Dict, Any
+
 from fastapi import APIRouter, HTTPException, Depends, status, Query
+from pydantic import BaseModel
+
+# 核心模块导入
+from app.core.config import settings
+from app.core.database import get_database
+from app.core.security import create_access_token
+
+# 模型导入
 from app.models.user import UserCreate, UserLogin, UserProfile, UserTags, UserTagsResponse, TagUpdateRequest
 from app.models.content import Content
+
+# 服务导入
 from app.services.user_service import UserService
 from app.services.recommendation_service import RecommendationService
-from app.core.security import create_access_token
-from app.core.database import get_database
+from app.services.content_service import ContentService
+
+# 工具模块导入
 from app.utils.region_mapper import RegionMapper
-from datetime import timedelta
-from app.core.config import settings
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel
-import logging
-from ..utils.tag_processor import TagProcessor
+from app.utils.tag_processor import TagProcessor
+from app.utils.energy_weight_system import EnergyWeightSystem
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -70,6 +85,12 @@ class DemoUsersResponse(BaseModel):
     users: List[DemoUser]
     total: int
 
+class TagsUpdateRequest(BaseModel):
+    tags: List[dict]
+
+class EnergySelectionRequest(BaseModel):
+    energy_types: List[str]
+
 @router.get("/supported-cities", response_model=SupportedCitiesResponse)
 async def get_supported_cities():
     """获取支持的城市列表和区域信息"""
@@ -124,16 +145,17 @@ async def register_user(
     try:
         user_service = UserService(db)
         
+        # 🔥 提取能源类型
+        energy_types = request.get("energy_types", [])
+        
         # 从请求中提取用户基础信息
         user_data = UserCreate(
             email=request.get("email"),
             username=request.get("username"), 
             password=request.get("password"),
-            register_city=request.get("register_city")
+            register_city=request.get("register_city"),
+            energy_types=energy_types  # 🔥 传递能源类型到UserCreate
         )
-        
-        # 提取能源类型
-        energy_types = request.get("energy_types", [])
         
         user_db = await user_service.create_user(user_data, energy_types)
         
@@ -149,7 +171,8 @@ async def register_user(
             created_at=user_db.created_at,
             has_initial_tags=True,
             access_features=access_features,
-            register_city=user_db.register_city
+            register_city=user_db.register_city,
+            register_info=user_db.register_info  # 🔥 返回注册信息
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -322,6 +345,52 @@ async def update_user_tags(user_id: str, tag_request: TagUpdateRequest, db=Depen
             detail=f"Failed to update user tags: {str(e)}"
         )
 
+@router.post("/{user_id}/tags/reset", response_model=UserTagsResponse)
+async def reset_user_tags(user_id: str, db=Depends(get_database)):
+    """🔥 重置用户标签到注册时的原始配置"""
+    logger.info(f"🔄 重置用户标签 - user_id: {user_id}")
+    
+    try:
+        user_service = UserService(db)
+        
+        logger.info(f"🔍 获取用户注册信息并重置标签...")
+        reset_tags = await user_service.reset_user_tags_to_registration(user_id)
+        
+        if not reset_tags:
+            logger.error(f"❌ 重置用户标签失败 - user_id: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found or failed to reset tags"
+            )
+        
+        logger.info(f"✅ 用户标签重置成功 - 最终标签数量: {len(reset_tags.tags)}")
+        
+        # 统计重置后的标签分布
+        tag_stats = {}
+        for tag in reset_tags.tags:
+            category = tag.category
+            if category not in tag_stats:
+                tag_stats[category] = 0
+            tag_stats[category] += 1
+        
+        logger.info(f"📊 重置后标签分布: {tag_stats}")
+        
+        return UserTagsResponse(
+            data=reset_tags,
+            message="User tags reset to registration configuration successfully"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ 重置用户标签错误: {str(e)}")
+        import traceback
+        logger.error(f"错误堆栈: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reset user tags: {str(e)}"
+        )
+
 @router.get("/{user_id}/recommendations", response_model=ContentListResponse)
 async def get_user_recommendations(
     user_id: str,
@@ -355,7 +424,6 @@ async def get_user_recommendations(
         except Exception as rec_error:
             print(f"❌ 推荐服务失败: {str(rec_error)}")
             # 如果推荐服务失败，返回默认内容
-            from app.services.content_service import ContentService
             content_service = ContentService(db)
             recommendations = await content_service.get_content_list(
                 skip=skip,
@@ -396,7 +464,7 @@ async def get_user_recommendations(
             print(f"📋 应用内容类型筛选: {content_type}")
             recommendations = [
                 content for content in recommendations
-                if getattr(content, 'type', None) == content_type
+                if getattr(content, 'content_type', None) == content_type
             ]
             print(f"📑 筛选后内容数量: {len(recommendations)}")
         
@@ -652,48 +720,430 @@ async def get_provinces_with_cities():
             detail=f"Failed to get provinces with cities: {str(e)}"
         )
 
-@router.get("/tag-options")
-async def get_tag_options():
-    """获取所有标签选项配置"""
+@router.get("/debug-imports")
+async def debug_imports():
+    """调试导入问题"""
     try:
-        # 从 RegionMapper 获取地区数据
-        all_cities = RegionMapper.get_all_cities()
-        all_provinces_data = RegionMapper.get_all_provinces()
-        all_regions_data = RegionMapper.get_all_regions()
+        result = {}
         
-        # 构建城市按区域分组的数据
-        cities_by_region = {}
-        for region_data in all_regions_data:
-            region_code = region_data['code']
-            cities_in_region = RegionMapper.get_cities_by_region(region_code)
-            if cities_in_region:
-                cities_by_region[region_data['name']] = cities_in_region
+        # 测试各个导入
+        print("🔍 测试导入...")
+        
+        # 1. 测试EnergyWeightSystem
+        try:
+            from app.utils.energy_weight_system import EnergyWeightSystem
+            products = EnergyWeightSystem.get_all_energy_products()
+            result["energy_system"] = f"成功: {len(products)}个产品"
+            print(f"✅ EnergyWeightSystem: {len(products)}个产品")
+        except Exception as e:
+            result["energy_system"] = f"失败: {str(e)}"
+            print(f"❌ EnergyWeightSystem: {str(e)}")
+        
+        # 2. 测试RegionMapper
+        try:
+            from app.utils.region_mapper import RegionMapper
+            provinces = RegionMapper.get_provinces_with_cities()
+            result["region_mapper"] = f"成功: {len(provinces)}个省份"
+            print(f"✅ RegionMapper: {len(provinces)}个省份")
+        except Exception as e:
+            result["region_mapper"] = f"失败: {str(e)}"
+            print(f"❌ RegionMapper: {str(e)}")
+        
+        # 3. 测试ContentService
+        try:
+            # 直接引用已导入的ContentService
+            print(f"✅ ContentService类: {ContentService}")
+            result["content_service"] = f"成功: {ContentService.__name__}"
+        except Exception as e:
+            result["content_service"] = f"失败: {str(e)}"
+            print(f"❌ ContentService: {str(e)}")
+        
+        # 4. 测试所有导入的变量是否存在
+        imports_status = {}
+        test_imports = [
+            "EnergyWeightSystem", "RegionMapper", "ContentService", 
+            "UserService", "RecommendationService"
+        ]
+        
+        for import_name in test_imports:
+            try:
+                import_obj = globals().get(import_name)
+                if import_obj:
+                    imports_status[import_name] = f"存在: {type(import_obj)}"
+                else:
+                    imports_status[import_name] = "不存在"
+            except Exception as e:
+                imports_status[import_name] = f"错误: {str(e)}"
+        
+        result["imports_status"] = imports_status
         
         return {
-            # 基础标签配置
-            "energy_type_tags": TagProcessor.STANDARD_ENERGY_TYPES,
-            "basic_info_tags": TagProcessor.STANDARD_BASIC_INFO_TAGS,
-            "business_field_tags": TagProcessor.STANDARD_BUSINESS_FIELD_TAGS,
-            "beneficiary_tags": TagProcessor.STANDARD_BENEFICIARY_TAGS,
-            "policy_measure_tags": TagProcessor.STANDARD_POLICY_MEASURE_TAGS,
-            "importance_tags": TagProcessor.STANDARD_IMPORTANCE_TAGS,
-            
-            # 内容类型映射
-            "content_type_map": TagProcessor.CONTENT_TYPE_MAP,
-            
-            # 地区标签配置
-            "region_tags": {
-                "cities": all_cities,
-                "cities_by_region": cities_by_region,
-                "provinces": [p['name'] for p in all_provinces_data],
-                "regions": [r['name'] for r in all_regions_data],
-                "total_cities": len(all_cities),
-                "total_provinces": len(all_provinces_data),
-                "total_regions": len(all_regions_data)
+            "status": "debug_complete",
+            "results": result,
+            "globals_keys": list(globals().keys())[:20]  # 前20个全局变量
+        }
+        
+    except Exception as e:
+        import traceback
+        return {
+            "status": "debug_error", 
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+@router.get("/tag-options")
+async def get_tag_options(
+    database = Depends(get_database)
+):
+    """获取所有标签选项配置"""
+    try:
+        # 🔥 简化版本，只返回基本的能源类型标签
+        print("📍 开始获取标签选项...")
+        
+        # 直接从能源权重系统获取能源类型标签
+        print("📍 获取能源产品...")
+        all_energy_products = EnergyWeightSystem.get_all_energy_products()
+        energy_type_tags = [product["name"] for product in all_energy_products]
+        print(f"📍 获取到 {len(energy_type_tags)} 个能源产品")
+        
+        # 获取其他预设标签选项
+        print("📍 设置基础标签...")
+        basic_info_tags = ["政策法规", "行业资讯", "交易公告", "调价公告", "研报分析"]
+        business_field_tags = [
+            "市场动态", "价格变化", "交易信息", "科技创新", 
+            "政策解读", "国际合作", "投资支持", "民营经济发展", 
+            "市场准入优化", "公平竞争"
+        ]
+        beneficiary_tags = [
+            "能源企业", "政府机构", "交易方", "民营企业", 
+            "国有企业", "外资企业", "LNG交易方"
+        ]
+        policy_measure_tags = [
+            "市场监管", "技术合作", "竞价规则", "投资支持", 
+            "市场准入", "创新投融资", "风险管控", "市场准入措施", 
+            "价格调整", "区域价格调整"
+        ]
+        importance_tags = [
+            "国家级", "权威发布", "重要政策", "行业影响", 
+            "常规公告", "国际影响"
+        ]
+        
+        print("📍 获取地区数据...")
+        # 获取地区标签数据
+        provinces_data = RegionMapper.get_provinces_with_cities()
+        all_cities = []
+        all_provinces = []
+        
+        for province_info in provinces_data:
+            all_provinces.append(province_info["name"])
+            all_cities.extend(province_info["cities"])
+        
+        all_regions = [region["name"] for region in RegionMapper.get_all_regions()]
+        
+        cities_by_region = {}
+        for region in RegionMapper.get_all_regions():
+            cities_by_region[region["name"]] = RegionMapper.get_cities_by_region(region["code"])
+        
+        region_tags = {
+            "cities": sorted(list(set(all_cities))),
+            "provinces": sorted(list(set(all_provinces))),
+            "regions": sorted(all_regions),
+            "cities_by_region": cities_by_region,
+            "total_cities": len(set(all_cities)),
+            "total_provinces": len(set(all_provinces)),
+            "total_regions": len(all_regions)
+        }
+        
+        # 内容类型映射
+        content_type_map = {
+            "policy": "政策法规",
+            "news": "行业资讯", 
+            "price": "调价公告",
+            "announcement": "交易公告",
+            "report": "研报分析"
+        }
+        
+        print("📍 构造响应数据...")
+        result = {
+            "energy_type_tags": energy_type_tags,
+            "basic_info_tags": basic_info_tags,
+            "business_field_tags": business_field_tags,
+            "beneficiary_tags": beneficiary_tags,
+            "policy_measure_tags": policy_measure_tags,
+            "importance_tags": importance_tags,
+            "region_tags": region_tags,
+            "content_type_map": content_type_map
+        }
+        
+        print(f"📍 返回成功，包含 {len(energy_type_tags)} 个能源标签")
+        return result
+        
+    except Exception as e:
+        print(f"❌ 标签选项获取错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get tag options: {str(e)}"
+        )
+
+@router.get("/energy-hierarchy")
+async def get_energy_hierarchy():
+    """获取能源产品层级结构"""
+    try:
+        hierarchy = EnergyWeightSystem.get_energy_hierarchy_tree()
+        all_products = EnergyWeightSystem.get_all_energy_products()
+        categories = EnergyWeightSystem.get_all_categories()
+        
+        return {
+            "hierarchy": hierarchy,
+            "all_products": all_products,
+            "categories": categories,
+            "total_categories": len(categories),
+            "total_products": len(all_products)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get energy hierarchy: {str(e)}"
+        )
+
+@router.post("/energy-weights")
+async def get_energy_weights(request: EnergySelectionRequest):
+    """获取能源产品权重配置"""
+    try:
+        recommendations = EnergyWeightSystem.recommend_energy_weights(request.energy_types)
+        
+        # 统计信息
+        total_weight = sum(rec["recommended_weight"] for rec in recommendations)
+        categories_covered = set(rec["category"] for rec in recommendations if rec["category"])
+        
+        return {
+            "recommendations": recommendations,
+            "statistics": {
+                "total_energies": len(request.energy_types),
+                "total_weight": total_weight,
+                "categories_covered": list(categories_covered),
+                "categories_count": len(categories_covered)
             }
         }
+        
     except Exception as e:
-        logger.error(f"获取标签选项失败: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get energy weights: {str(e)}"
+        )
+
+@router.post("/validate-energy-selection")
+async def validate_energy_selection(request: EnergySelectionRequest):
+    """验证和优化用户能源选择"""
+    try:
+        validation_result = EnergyWeightSystem.validate_energy_selection(request.energy_types)
+        recommendations = EnergyWeightSystem.recommend_energy_weights(request.energy_types)
+        
+        return {
+            "validation": validation_result,
+            "recommendations": recommendations,
+            "optimization_suggestions": validation_result["suggestions"]
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to validate energy selection: {str(e)}"
+        )
+
+@router.get("/{user_id}/smart-recommendations", response_model=ContentListResponse)
+async def get_user_smart_recommendations(
+    user_id: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db=Depends(get_database)
+):
+    """🔥 智能推荐API：精准权重匹配优先 + 时间排序"""
+    print(f"🧠 智能推荐API调用: user_id={user_id}, page={page}, page_size={page_size}")
+    
+    try:
+        # 创建推荐服务实例
+        recommendation_service = RecommendationService(db)
+        
+        # 计算分页参数
+        skip = (page - 1) * page_size
+        print(f"📄 分页参数: skip={skip}, limit={page_size}")
+        
+        # 🔥 使用新的智能推荐算法
+        print("🎯 调用智能推荐算法...")
+        recommendations = await recommendation_service.get_smart_recommendations(
+            user_id=user_id,
+            skip=skip,
+            limit=page_size
+        )
+        
+        print(f"✅ 智能推荐成功返回 {len(recommendations)} 条内容")
+        
+        # 🔥 API层面的最终去重保障
+        unique_recommendations = []
+        seen_ids = set()
+        
+        print(f"🔍 API层去重检查: 输入 {len(recommendations)} 条推荐")
+        
+        for i, content in enumerate(recommendations):
+            content_id = content.id
+            print(f"   检查第{i+1}条: ID={content_id}, Title={content.title[:30]}...")
+            
+            if content_id not in seen_ids:
+                unique_recommendations.append(content)
+                seen_ids.add(content_id)
+                print(f"   ✅ 添加到唯一列表 (当前{len(unique_recommendations)}条)")
+            else:
+                print(f"   ⚠️ API层去重：跳过重复内容 {content.title[:30]}... (ID: {content_id})")
+        
+        final_recommendations = unique_recommendations
+        print(f"🎯 API层去重完成: {len(recommendations)} → {len(final_recommendations)}条唯一内容")
+        
+        # 构建响应
+        total = max(len(final_recommendations), 50)  # 简化总数计算
+        has_next = len(final_recommendations) == page_size
+        
+        print(f"📊 智能推荐API完成: {len(final_recommendations)} 条内容")
+        return ContentListResponse(
+            items=final_recommendations,
+            total=total,
+            page=page,
+            page_size=page_size,
+            has_next=has_next
+        )
+        
+    except Exception as e:
+        print(f"❌ 智能推荐API错误: {str(e)}")
         import traceback
-        logger.error(f"错误堆栈: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"获取标签选项失败: {str(e)}")
+        print(f"错误堆栈: {traceback.format_exc()}")
+        
+        # 回退到普通推荐
+        try:
+            recommendation_service = RecommendationService(db)
+            skip = (page - 1) * page_size
+            recommendations = await recommendation_service.get_user_recommendations(
+                user_id=user_id,
+                skip=skip,
+                limit=page_size
+            )
+            return ContentListResponse(
+                items=recommendations,
+                total=50,
+                page=page,
+                page_size=page_size,
+                has_next=len(recommendations) == page_size
+            )
+        except:
+            # 最后的回退：返回空结果
+            return ContentListResponse(
+                items=[],
+                total=0,
+                page=page,
+                page_size=page_size,
+                has_next=False
+            )
+
+@router.get("/{user_id}/recommendations-by-type/{content_type}", response_model=ContentListResponse)
+async def get_user_recommendations_by_type(
+    user_id: str,
+    content_type: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db=Depends(get_database)
+):
+    """🎯 按内容类型获取智能推荐：行情/政策/公告独立推荐逻辑"""
+    print(f"🎯 按类型推荐API: user_id={user_id}, type={content_type}")
+    
+    try:
+        # 创建推荐服务实例
+        recommendation_service = RecommendationService(db)
+        
+        # 计算分页参数
+        skip = (page - 1) * page_size
+        
+        # 🔥 根据内容类型调用对应的智能推荐逻辑
+        if content_type == "market":
+            # 行情推荐：行业资讯类内容
+            recommendations = await recommendation_service.get_smart_recommendations_by_type(
+                user_id=user_id,
+                content_types=["news"],
+                basic_info_tags=["行业资讯"],
+                skip=skip,
+                limit=page_size
+            )
+        elif content_type == "policy":
+            # 政策推荐：政策法规类内容
+            recommendations = await recommendation_service.get_smart_recommendations_by_type(
+                user_id=user_id,
+                content_types=["policy"],
+                basic_info_tags=["政策法规"],
+                skip=skip,
+                limit=page_size
+            )
+        elif content_type == "announcement":
+            # 公告推荐：交易公告+调价公告
+            recommendations = await recommendation_service.get_smart_recommendations_by_type(
+                user_id=user_id,
+                content_types=["announcement", "price"],
+                basic_info_tags=["交易公告", "调价公告"],
+                skip=skip,
+                limit=page_size
+            )
+        else:
+            # 全部推荐：使用智能推荐
+            recommendations = await recommendation_service.get_smart_recommendations(
+                user_id=user_id,
+                skip=skip,
+                limit=page_size
+            )
+        
+        print(f"✅ 按类型推荐成功: {content_type} - {len(recommendations)}条")
+        
+        # 🔥 API层面的最终去重保障
+        unique_recommendations = []
+        seen_ids = set()
+        
+        print(f"🔍 API层去重检查: 输入 {len(recommendations)} 条推荐")
+        
+        for i, content in enumerate(recommendations):
+            content_id = content.id
+            print(f"   检查第{i+1}条: ID={content_id}, Title={content.title[:30]}...")
+            
+            if content_id not in seen_ids:
+                unique_recommendations.append(content)
+                seen_ids.add(content_id)
+                print(f"   ✅ 添加到唯一列表 (当前{len(unique_recommendations)}条)")
+            else:
+                print(f"   ⚠️ API层去重：跳过重复内容 {content.title[:30]}... (ID: {content_id})")
+        
+        final_recommendations = unique_recommendations
+        print(f"🎯 API层去重完成: {len(recommendations)} → {len(final_recommendations)}条唯一内容")
+        
+        # 构建响应
+        total = max(len(final_recommendations), 50)
+        has_next = len(final_recommendations) == page_size
+        
+        return ContentListResponse(
+            items=final_recommendations,
+            total=total,
+            page=page,
+            page_size=page_size,
+            has_next=has_next
+        )
+        
+    except Exception as e:
+        print(f"❌ 按类型推荐API错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        
+        # 回退到空结果
+        return ContentListResponse(
+            items=[],
+            total=0,
+            page=page,
+            page_size=page_size,
+            has_next=False
+        )

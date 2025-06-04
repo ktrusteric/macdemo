@@ -172,7 +172,6 @@ export const useAdminStore = defineStore('admin', () => {
       return {
         articles: data.items.map((item: any) => ({
           ...item,
-          id: item._id || item.id, // 确保有id字段
           publish_date: item.publish_time // 映射时间字段
         })),
         total: data.total,

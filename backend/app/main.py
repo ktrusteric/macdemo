@@ -1,14 +1,24 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import connect_to_mongo, close_mongo_connection
-from app.api import users, content, recommendations, ai_integration, region, admin
+from app.api import users, content, recommendations, ai_integration, region, admin, ai_chat, favorites
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await connect_to_mongo()
+    yield
+    # Shutdown
+    await close_mongo_connection()
 
 def create_application() -> FastAPI:
     application = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,
-        openapi_url=f"{settings.API_V1_STR}/openapi.json"
+        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        lifespan=lifespan
     )
     
     # CORS配置 - 更宽泛的配置以支持开发环境
@@ -41,6 +51,14 @@ def create_application() -> FastAPI:
         prefix=f"{settings.API_V1_STR}/ai", 
         tags=["ai"]
     )
+    
+    # 添加AI聊天路由
+    application.include_router(
+        ai_chat.router,
+        prefix=f"{settings.API_V1_STR}/ai-chat",
+        tags=["ai-chat"]
+    )
+    
     application.include_router(
         region.router, 
         prefix=f"{settings.API_V1_STR}/region", 
@@ -54,6 +72,13 @@ def create_application() -> FastAPI:
         tags=["admin"]
     )
     
+    # 添加收藏功能路由
+    application.include_router(
+        favorites.router,
+        prefix=f"{settings.API_V1_STR}/favorites",
+        tags=["favorites"]
+    )
+    
     # 添加用户行为记录路由
     application.include_router(
         users.router,
@@ -64,14 +89,6 @@ def create_application() -> FastAPI:
     return application
 
 app = create_application()
-
-@app.on_event("startup")
-async def startup_event():
-    await connect_to_mongo()
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await close_mongo_connection()
 
 @app.get("/")
 async def root():

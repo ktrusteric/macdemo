@@ -105,8 +105,25 @@ class AdminService:
             article_dict["created_at"] = datetime.utcnow()
             article_dict["updated_at"] = datetime.utcnow()
             
+            # 处理发布时间
             if not article_dict.get("publish_time"):
-                article_dict["publish_time"] = datetime.utcnow()
+                publish_time = datetime.utcnow()
+                article_dict["publish_time"] = publish_time
+            else:
+                publish_time = article_dict["publish_time"]
+                if isinstance(publish_time, str):
+                    try:
+                        publish_time = datetime.fromisoformat(publish_time.replace('Z', '+00:00'))
+                        article_dict["publish_time"] = publish_time
+                    except:
+                        publish_time = datetime.utcnow()
+                        article_dict["publish_time"] = publish_time
+            
+            # 🔥 修复：同时设置publish_date字段，确保收藏功能能正确显示时间
+            if isinstance(publish_time, datetime):
+                article_dict["publish_date"] = publish_time.strftime("%Y-%m-%d")
+            else:
+                article_dict["publish_date"] = datetime.utcnow().strftime("%Y-%m-%d")
             
             # 插入数据库
             result = await self.content_collection.insert_one(article_dict)
@@ -135,6 +152,23 @@ class AdminService:
             for field, value in update_data.dict(exclude_unset=True).items():
                 if value is not None:
                     update_dict[field] = value
+            
+            # 🔥 修复：如果更新了publish_time，同时更新publish_date
+            if "publish_time" in update_dict:
+                publish_time = update_dict["publish_time"]
+                if isinstance(publish_time, str):
+                    try:
+                        publish_time = datetime.fromisoformat(publish_time.replace('Z', '+00:00'))
+                        update_dict["publish_time"] = publish_time
+                    except:
+                        publish_time = datetime.utcnow()
+                        update_dict["publish_time"] = publish_time
+                
+                # 同时更新publish_date字段
+                if isinstance(publish_time, datetime):
+                    update_dict["publish_date"] = publish_time.strftime("%Y-%m-%d")
+                else:
+                    update_dict["publish_date"] = datetime.utcnow().strftime("%Y-%m-%d")
             
             update_dict["updated_at"] = datetime.utcnow()
             
@@ -388,19 +422,21 @@ class AdminService:
             logger.info(f"📊 查询结果总数: {total_count}")
             
             # 获取文章列表
-            cursor = self.content_collection.find(query).sort("导入时间", -1).skip(skip).limit(page_size)
+            cursor = self.content_collection.find(query).sort("publish_date", -1).skip(skip).limit(page_size)
             articles = []
             
             async for doc in cursor:
                 try:
                     # 中文字段名到英文字段名的映射
                     mapped_doc = {
+                        # 🔥 修复：添加id字段，现在alias已删除，应该能正常工作
                         "id": str(doc["_id"]),
                         "title": doc.get("标题") or doc.get("title", "无标题"),
                         "content": doc.get("文章内容") or doc.get("content", "无内容"),
                         "source": doc.get("来源机构") or doc.get("source", "未知来源"),
                         "link": doc.get("链接") or doc.get("link", ""),
-                        "publish_time": doc.get("发布时间") or doc.get("publish_time", datetime.utcnow()),
+                        # 🔥 修复：优先使用publish_date字段，后备publish_time
+                        "publish_time": self._parse_document_publish_time(doc),
                         
                         # 🔥 type字段 - 优先使用已有的type字段
                         "type": doc.get("type", "news"),
@@ -420,15 +456,9 @@ class AdminService:
                         "view_count": doc.get("view_count", 0)
                     }
                     
-                    # 处理发布时间格式
-                    if isinstance(mapped_doc["publish_time"], str):
-                        try:
-                            mapped_doc["publish_time"] = datetime.strptime(mapped_doc["publish_time"], "%Y-%m-%d")
-                        except:
-                            mapped_doc["publish_time"] = datetime.utcnow()
-                    
                     # 创建Content对象
                     content = Content(**mapped_doc)
+                    # 🔥 删除手动设置，因为现在应该能通过映射字典正确设置
                     articles.append(content)
                     
                 except Exception as e:
@@ -437,8 +467,43 @@ class AdminService:
             
             logger.info(f"✅ 成功处理 {len(articles)} 篇文章")
             
+            # 修正返回数据，确保id字段正确
+            items = []
+            for content in articles:
+                # 🔥 彻底绕过Pydantic序列化，直接构造字典
+                item_dict = {
+                    'id': content.id,  # 直接使用对象的id属性
+                    'title': content.title,
+                    'content': content.content,
+                    'type': content.type.value if hasattr(content.type, 'value') else str(content.type),
+                    'source': content.source,
+                    'publish_time': content.publish_time.isoformat() if content.publish_time else None,
+                    # 🔥 添加publish_date字段，确保前端编辑时能正确读取
+                    'publish_date': content.publish_time.strftime("%Y-%m-%d") if content.publish_time else None,
+                    'link': content.link,
+                    'basic_info_tags': content.basic_info_tags or [],
+                    'region_tags': content.region_tags or [],
+                    'energy_type_tags': content.energy_type_tags or [],
+                    'business_field_tags': content.business_field_tags or [],
+                    'beneficiary_tags': content.beneficiary_tags or [],
+                    'policy_measure_tags': content.policy_measure_tags or [],
+                    'importance_tags': content.importance_tags or [],
+                    'created_at': content.created_at.isoformat() if content.created_at else None,
+                    'updated_at': content.updated_at.isoformat() if content.updated_at else None,
+                    'view_count': content.view_count or 0,
+                    'relevance_score': content.relevance_score
+                }
+                
+                # 🔥 调试：打印第一个item的详细信息
+                if len(items) == 0:
+                    logger.info(f"🔍 DEBUG - First item content.id: {content.id}")
+                    logger.info(f"🔍 DEBUG - First item dict id: {item_dict.get('id')}")
+                    logger.info(f"🔍 DEBUG - First item dict keys: {list(item_dict.keys())}")
+                
+                items.append(item_dict)
+            
             return {
-                "items": articles,
+                "items": items,  # 🔥 使用修正后的字典列表
                 "total": total_count,
                 "page": page,
                 "page_size": page_size,
@@ -458,3 +523,66 @@ class AdminService:
             "交易公告": "announcement"
         }
         return type_mapping.get(chinese_type, "news") 
+    
+    def _parse_document_publish_time(self, document: dict) -> datetime:
+        """解析文档发布时间字段 - 优先使用publish_date，后备publish_time"""
+        # 🔥 优先使用publish_date字段（字符串格式YYYY-MM-DD）
+        if document.get("publish_date"):
+            try:
+                publish_date_str = document["publish_date"]
+                if isinstance(publish_date_str, str) and len(publish_date_str) == 10:
+                    # YYYY-MM-DD格式，补全时分秒为00:00:00
+                    return datetime.strptime(publish_date_str + " 00:00:00", "%Y-%m-%d %H:%M:%S")
+                else:
+                    return self._parse_datetime_value(publish_date_str)
+            except Exception as e:
+                logger.warning(f"Failed to parse publish_date: {document.get('publish_date')} - {str(e)}")
+        
+        # 🔥 后备：使用publish_time字段（datetime对象）
+        if document.get("publish_time"):
+            parsed_time = self._parse_datetime_value(document["publish_time"])
+            if parsed_time:
+                return parsed_time
+        
+        # 尝试其他中文时间字段
+        time_candidates = [
+            document.get("发布时间"),
+            document.get("发布日期"),
+            document.get("created_at"),
+            document.get("导入时间")
+        ]
+        
+        for time_value in time_candidates:
+            if time_value:
+                parsed_time = self._parse_datetime_value(time_value)
+                if parsed_time:
+                    return parsed_time
+        
+        # 所有解析都失败，返回当前时间
+        return datetime.utcnow()
+    
+    def _parse_datetime_value(self, time_value) -> datetime:
+        """解析datetime值"""
+        if not time_value:
+            return datetime.utcnow()
+        
+        if isinstance(time_value, datetime):
+            return time_value
+        
+        if isinstance(time_value, str):
+            try:
+                # 尝试标准日期格式 YYYY-MM-DD
+                return datetime.strptime(time_value, "%Y-%m-%d")
+            except ValueError:
+                try:
+                    # 尝试ISO格式解析
+                    return datetime.fromisoformat(time_value.replace('Z', '+00:00'))
+                except ValueError:
+                    try:
+                        # 尝试其他常见格式
+                        return datetime.strptime(time_value[:19], "%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        logger.warning(f"无法解析时间格式: {time_value}")
+                        return datetime.utcnow()
+        
+        return datetime.utcnow() 

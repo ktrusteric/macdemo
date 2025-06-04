@@ -20,6 +20,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true }
   },
   { 
+    path: '/favorites', 
+    component: () => import('@/pages/Favorites.vue'),
+    meta: { requiresAuth: true }
+  },
+  { 
     path: '/market', 
     component: () => import('@/pages/Market.vue'),
     meta: { requiresAuth: true }
@@ -61,6 +66,11 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'users',
         component: () => import('@/pages/AdminUsers.vue'),
+        meta: { requiresAdminAuth: true }
+      },
+      {
+        path: 'chat-history',
+        component: () => import('@/pages/admin/ChatHistoryManagement.vue'),
         meta: { requiresAdminAuth: true }
       }
     ]

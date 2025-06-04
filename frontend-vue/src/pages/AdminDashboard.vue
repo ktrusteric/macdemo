@@ -25,14 +25,6 @@
           <p>管理员数</p>
         </div>
       </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
-        <div class="stat-content">
-          <h3>{{ stats.users.regular }}</h3>
-          <p>普通用户</p>
-        </div>
-      </div>
     </div>
 
     <!-- 快速操作 -->
@@ -166,7 +158,6 @@ const totalViews = computed(() => stats.value?.total_views || 0)
 const typeDistribution = computed(() => stats.value?.articles?.by_type || {})
 const totalUsers = computed(() => stats.value?.users?.total || 0)
 const adminUsers = computed(() => stats.value?.users?.admins || 0)
-const regularUsers = computed(() => stats.value?.users?.regular_users || 0)
 
 const importOptions = ref({
   overwrite_existing: false,

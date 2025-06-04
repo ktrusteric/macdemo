@@ -3,6 +3,7 @@ from pymongo.database import Database
 from app.models.user import UserTags, UserTag, TagCategory, UserCreate, User, UserRole, TagSource
 from app.core.security import get_password_hash, verify_password
 from app.utils.region_mapper import RegionMapper
+from app.utils.energy_weight_system import EnergyWeightSystem, get_energy_weight  # 🔥 新增能源权重系统
 from datetime import datetime
 import uuid
 
@@ -39,6 +40,19 @@ class UserService:
             if not region_code:
                 raise ValueError(f"无法获取城市 {user_data.register_city} 的区域信息")
             
+            # 🔥 获取注册时的完整地域信息
+            location_info = RegionMapper.get_full_location_info(user_data.register_city)
+            
+            # 🔥 构建注册信息（用于重置标签功能）
+            register_info = {
+                "register_city": user_data.register_city,
+                "energy_types": energy_types or [],
+                "location_info": location_info,
+                "register_time": datetime.utcnow().isoformat(),
+                "province_code": province_code,
+                "region_code": region_code
+            }
+            
             # 创建用户基础信息
             user_id = str(uuid.uuid4())
             hashed_password = get_password_hash(user_data.password)
@@ -52,7 +66,8 @@ class UserService:
                 "is_active": True,
                 "created_at": datetime.utcnow().isoformat(),
                 "has_initial_tags": False,
-                "register_city": user_data.register_city
+                "register_city": user_data.register_city,
+                "register_info": register_info  # 🔥 存储完整的注册信息
             }
             
             # 插入用户基础信息
@@ -83,7 +98,7 @@ class UserService:
         register_city: str,
         energy_types: List[str] = None
     ) -> UserTags:
-        """基于注册城市初始化用户标签（三层标签：城市、省份、区域）"""
+        """基于注册城市初始化用户标签（四层标签权重体系 + 能源分层权重）"""
         try:
             # 验证城市有效性（改用省份映射验证）
             province_code = RegionMapper.get_province_by_city(register_city)
@@ -95,45 +110,59 @@ class UserService:
             
             tags = []
             
-            # 1. 城市标签（权重2.5，用户明确选择）
+            # 🔥 四级地区标签权重体系：城市(5.0) > 省份(1.5) > 地区(1.0) > 全国(0.5)
+            
+            # 1. 城市标签（权重5.0，用户明确选择，最高优先级）
             tags.append(UserTag(
                 category=TagCategory.CITY,
                 name=location_info["city"],
-                weight=2.5,
+                weight=5.0,  # 🔥 注册城市权重提升到5.0
                 source=TagSource.PRESET,
                 created_at=datetime.utcnow()
             ))
             
-            # 2. 省份标签（权重2.0，自动生成）
+            # 2. 省份标签（权重1.5，自动生成）
             if "province" in location_info:
                 tags.append(UserTag(
                     category=TagCategory.PROVINCE,
                     name=location_info["province"],
-                    weight=2.0,
+                    weight=1.5,  # 🔥 省份权重调整为1.5
                     source=TagSource.REGION_AUTO,
                     created_at=datetime.utcnow()
                 ))
             
-            # 3. 区域标签（权重1.5，自动生成）
+            # 3. 地区标签（权重1.0，自动生成）
             if "region" in location_info:
                 tags.append(UserTag(
                     category=TagCategory.REGION,
                     name=location_info["region"],
-                    weight=1.5,
+                    weight=1.0,  # 🔥 地区权重调整为1.0
                     source=TagSource.REGION_AUTO,
                     created_at=datetime.utcnow()
                 ))
             
-            # 4. 能源类型标签（如果提供，权重设为2.0，与省份标签相当）
+            # 4. 全国标签（权重0.5，自动生成，确保覆盖）
+            # 🔥 注意：统一使用"全国"标签，不使用"中国"标签，避免重复
+            tags.append(UserTag(
+                category=TagCategory.REGION,
+                name="全国",
+                weight=0.5,  # 🔥 全国权重最低0.5
+                source=TagSource.REGION_AUTO,
+                created_at=datetime.utcnow()
+            ))
+            
+            # 🔥 5. 能源类型标签（使用分层权重系统）
             if energy_types:
-                for energy_type in energy_types:
-                    tags.append(UserTag(
-                        category=TagCategory.ENERGY_TYPE,
-                        name=energy_type,
-                        weight=2.0,  # 提升能源类型权重
-                        source=TagSource.PRESET,
-                        created_at=datetime.utcnow()
-                    ))
+                energy_tags_info = self._create_energy_tags_with_weights(energy_types)
+                tags.extend(energy_tags_info["tags"])
+                
+                # 输出能源标签信息
+                print(f"⚡ 能源标签分层权重配置:")
+                for category, products in energy_tags_info["hierarchy"].items():
+                    if products:
+                        print(f"   📁 {category} (大类权重: 3.0)")
+                        for product in products:
+                            print(f"      └── {product} (具体产品权重: 5.0)")
             
             # 创建或更新用户标签
             user_tags = UserTags(
@@ -149,10 +178,77 @@ class UserService:
                 upsert=True
             )
             
+            print(f"✅ 用户 {user_id} 标签初始化完成:")
+            print(f"   🏙️ 城市标签: {location_info['city']} (权重: 5.0)")
+            if "province" in location_info:
+                print(f"   🏛️ 省份标签: {location_info['province']} (权重: 1.5)")
+            if "region" in location_info:
+                print(f"   🗺️ 地区标签: {location_info['region']} (权重: 1.0)")
+            print(f"   🌍 全国标签: 全国 (权重: 0.5)")
+            
             return user_tags
             
         except Exception as e:
             raise Exception(f"Failed to initialize user tags: {str(e)}")
+
+    def _create_energy_tags_with_weights(self, energy_types: List[str]) -> dict:
+        """
+        🔥 创建能源标签，应用分层权重系统
+        
+        Args:
+            energy_types: 用户选择的能源类型列表
+            
+        Returns:
+            dict: 包含标签列表和层级信息
+        """
+        energy_tags = []
+        hierarchy_info = {}
+        categories_added = set()
+        
+        for energy_type in energy_types:
+            # 获取能源权重和大类信息
+            weight_enum = get_energy_weight(energy_type)
+            weight = float(weight_enum)  # 🔥 将Enum转换为数值
+            category = EnergyWeightSystem.get_energy_category(energy_type)
+            
+            # 添加能源标签
+            energy_tags.append(UserTag(
+                category=TagCategory.ENERGY_TYPE,
+                name=energy_type,
+                weight=weight,  # 🔥 使用分层权重：大类3.0，具体产品5.0
+                source=TagSource.PRESET,
+                created_at=datetime.utcnow()
+            ))
+            
+            # 记录层级信息
+            if category:
+                if category not in hierarchy_info:
+                    hierarchy_info[category] = []
+                hierarchy_info[category].append(energy_type)
+                
+                # 如果选择的是具体产品，自动添加对应的大类标签（避免重复）
+                if category != energy_type and category not in categories_added:
+                    category_weight_enum = get_energy_weight(category)
+                    category_weight = float(category_weight_enum)  # 🔥 将Enum转换为数值
+                    
+                    energy_tags.append(UserTag(
+                        category=TagCategory.ENERGY_TYPE,
+                        name=category,
+                        weight=category_weight,  # 🔥 大类权重3.0
+                        source=TagSource.REGION_AUTO,  # 自动生成的大类标签
+                        created_at=datetime.utcnow()
+                    ))
+                    categories_added.add(category)
+                    
+                    if category not in hierarchy_info:
+                        hierarchy_info[category] = []
+        
+        return {
+            "tags": energy_tags,
+            "hierarchy": hierarchy_info,
+            "categories_count": len(categories_added),
+            "products_count": len(energy_types)
+        }
 
     async def get_user_region_info(self, user_id: str) -> dict:
         """获取用户的完整区域信息（城市、省份、区域）"""
@@ -332,19 +428,87 @@ class UserService:
             print(f"❌ 确保用户标签失败: {str(e)}")
             raise Exception(f"Failed to ensure user has tags: {str(e)}")
 
+    async def reset_user_tags_to_registration(self, user_id: str) -> UserTags:
+        """
+        🔥 根据用户注册信息重置标签
+        
+        这个方法会清除所有用户手动添加的标签，
+        恢复到注册时的原始标签配置
+        
+        Args:
+            user_id: 用户ID
+            
+        Returns:
+            UserTags: 重置后的用户标签
+        """
+        try:
+            # 获取用户信息（包含注册信息）
+            user = await self.get_user_by_id(user_id)
+            if not user:
+                raise ValueError(f"用户不存在: {user_id}")
+            
+            # 检查是否有注册信息
+            if not hasattr(user, 'register_info') or not user.register_info:
+                # 如果没有注册信息，使用 register_city 作为备选方案
+                if hasattr(user, 'register_city') and user.register_city:
+                    print(f"⚠️ 用户 {user_id} 缺少详细注册信息，使用 register_city: {user.register_city}")
+                    # 使用基础的城市信息重新初始化
+                    return await self.initialize_user_tags_by_city(user_id, user.register_city, [])
+                else:
+                    raise ValueError(f"用户 {user_id} 缺少注册信息，无法重置标签")
+            
+            register_info = user.register_info
+            original_city = register_info.get("register_city")
+            original_energy_types = register_info.get("energy_types", [])
+            
+            print(f"🔄 开始重置用户 {user_id} 的标签...")
+            print(f"   📍 原始注册城市: {original_city}")
+            print(f"   ⚡ 原始能源类型: {original_energy_types}")
+            
+            # 删除现有标签
+            await self.user_tags_collection.delete_one({"user_id": user_id})
+            print(f"   🗑️ 已清除所有现有标签")
+            
+            # 根据注册信息重新初始化标签
+            new_tags = await self.initialize_user_tags_by_city(
+                user_id, 
+                original_city, 
+                original_energy_types
+            )
+            
+            print(f"✅ 用户 {user_id} 标签重置完成")
+            print(f"   🏷️ 新标签数量: {len(new_tags.tags)}")
+            
+            # 统计标签类型
+            tag_stats = {}
+            for tag in new_tags.tags:
+                category = tag.category
+                if category not in tag_stats:
+                    tag_stats[category] = 0
+                tag_stats[category] += 1
+            
+            print(f"   📊 标签分布: {tag_stats}")
+            
+            return new_tags
+            
+        except Exception as e:
+            print(f"❌ 重置用户标签失败: {str(e)}")
+            raise Exception(f"Failed to reset user tags: {str(e)}")
+
     async def update_user_tags(self, user_id: str, tags: List[UserTag]) -> UserTags:
         """更新用户标签"""
         try:
-            # 验证标签数据
+            # 验证标签
             self._validate_tags(tags)
             
+            # 创建或更新用户标签
             user_tags = UserTags(
                 user_id=user_id,
                 tags=tags,
                 updated_at=datetime.utcnow()
             )
             
-            # 更新或插入文档
+            # 保存到数据库
             await self.user_tags_collection.replace_one(
                 {"user_id": user_id},
                 user_tags.dict(),
@@ -352,8 +516,53 @@ class UserService:
             )
             
             return user_tags
+            
         except Exception as e:
             raise Exception(f"Failed to update user tags: {str(e)}")
+
+    async def add_user_tag(
+        self, 
+        user_id: str, 
+        tag_name: str, 
+        category: TagCategory, 
+        weight: float = 1.0,
+        source: TagSource = TagSource.MANUAL
+    ) -> bool:
+        """
+        为用户添加新标签（用于收藏学习等场景）
+        """
+        try:
+            # 获取当前用户标签
+            current_user_tags = await self.get_user_tags(user_id)
+            if not current_user_tags:
+                # 如果用户没有标签，先初始化
+                current_user_tags = await self.ensure_user_has_tags(user_id)
+            
+            # 检查标签是否已存在
+            existing_tag_names = {tag.name for tag in current_user_tags.tags}
+            if tag_name in existing_tag_names:
+                return False  # 标签已存在，不重复添加
+            
+            # 创建新标签
+            new_tag = UserTag(
+                category=category,
+                name=tag_name,
+                weight=weight,
+                source=source,
+                created_at=datetime.utcnow()
+            )
+            
+            # 添加到现有标签列表
+            updated_tags = current_user_tags.tags + [new_tag]
+            
+            # 更新用户标签
+            await self.update_user_tags(user_id, updated_tags)
+            
+            return True
+            
+        except Exception as e:
+            print(f"添加用户标签失败: {str(e)}")
+            return False
 
     def _validate_tags(self, tags: List[UserTag]) -> None:
         """验证标签数据"""
@@ -479,4 +688,62 @@ class UserService:
             }
             
         except Exception as e:
-            raise Exception(f"Failed to get users: {str(e)}") 
+            raise Exception(f"Failed to get users: {str(e)}")
+
+    def _generate_region_tags(self, city: str) -> List[UserTag]:
+        """
+        基于用户注册城市生成完整的地区标签层次
+        权重体系：城市(5.0) > 省份(1.5) > 地区(1.0) > 全国(0.5)
+        """
+        region_tags = []
+        
+        # 🔥 四级地区标签权重配置
+        REGION_WEIGHT_CONFIG = {
+            "city": 5.0,        # 注册城市权重最高
+            "province": 1.5,    # 省份权重
+            "region": 1.0,      # 地区权重  
+            "national": 0.5     # 全国权重最低
+        }
+        
+        # 1. 城市标签（用户注册选择，权重最高）
+        region_tags.append(UserTag(
+            category="city",
+            name=city,
+            weight=REGION_WEIGHT_CONFIG["city"],
+            source="preset",
+            created_at=datetime.utcnow()
+        ))
+        
+        # 2. 省份标签（自动生成）
+        province = self._get_province_from_city(city)
+        if province and province != city:
+            region_tags.append(UserTag(
+                category="province", 
+                name=province,
+                weight=REGION_WEIGHT_CONFIG["province"],
+                source="region_auto",
+                created_at=datetime.utcnow()
+            ))
+        
+        # 3. 地区标签（自动生成）
+        region = self._get_region_from_city(city)
+        if region:
+            region_tags.append(UserTag(
+                category="region",
+                name=region,
+                weight=REGION_WEIGHT_CONFIG["region"], 
+                source="region_auto",
+                created_at=datetime.utcnow()
+            ))
+        
+        # 4. 全国标签（权重0.5，自动生成，确保覆盖）
+        # 🔥 注意：统一使用"全国"标签，不使用"中国"标签，避免重复
+        region_tags.append(UserTag(
+            category=TagCategory.REGION,
+            name="全国",
+            weight=0.5,  # 🔥 全国权重最低0.5
+            source=TagSource.REGION_AUTO,
+            created_at=datetime.utcnow()
+        ))
+        
+        return region_tags 

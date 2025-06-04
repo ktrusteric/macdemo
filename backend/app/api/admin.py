@@ -17,6 +17,8 @@ import logging
 import json
 from jose import JWTError, jwt
 from pydantic import BaseModel
+from ..services.dify_service import dify_service
+from fastapi.responses import JSONResponse
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -200,8 +202,21 @@ async def get_articles_for_management(
             tag_search=tag_search
         )
         
+        # 🔥 修复：确保每个文章都有正确的id字段，删除_id字段
+        if 'items' in result:
+            for item in result['items']:
+                if isinstance(item, dict):
+                    # 如果有_id但没有id，则设置id
+                    if '_id' in item and ('id' not in item or item.get('id') is None):
+                        item['id'] = item['_id']
+                    # 删除_id字段，避免混淆
+                    if '_id' in item:
+                        del item['_id']
+        
         logger.info(f"✅ 获取文章列表成功 - 返回 {len(result['items'])} 篇文章")
-        return result
+        
+        # 🔥 使用JSONResponse直接返回，绕过FastAPI的Pydantic序列化
+        return JSONResponse(content=result)
         
     except Exception as e:
         logger.error(f"❌ 获取文章列表失败: {str(e)}")
@@ -445,11 +460,10 @@ async def get_admin_stats(
         async for doc in admin_service.content_collection.aggregate(pipeline):
             type_stats[doc["_id"]] = doc["count"]
         
-        # 获取用户统计 - 修复：正确计算用户数
+        # 获取用户统计 - 修复：删除普通用户相关查询
         # 数据库中的用户（演示用户，角色为"free"）
         db_users_total = await admin_service.users_collection.count_documents({})
         db_admin_users = await admin_service.users_collection.count_documents({"role": "admin"})
-        db_regular_users = await admin_service.users_collection.count_documents({"role": {"$in": ["user", "free"]}})
         
         # 内置管理员账户数量（不在数据库中）
         builtin_admins = 2  # superadmin 和 admin
@@ -457,7 +471,6 @@ async def get_admin_stats(
         # 实际统计
         total_users = db_users_total + builtin_admins
         admin_users = db_admin_users + builtin_admins
-        regular_users = db_regular_users  # 只计算数据库中的普通用户
         
         stats = {
             "articles": {
@@ -466,12 +479,11 @@ async def get_admin_stats(
             },
             "users": {
                 "total": total_users,
-                "admins": admin_users,
-                "regular_users": regular_users
+                "admins": admin_users
             }
         }
         
-        logger.info(f"✅ 获取统计数据成功 - 文章:{total_articles}, 用户:{total_users}(管理员:{admin_users}, 普通:{regular_users})")
+        logger.info(f"✅ 获取统计数据成功 - 文章:{total_articles}, 用户:{total_users}(管理员:{admin_users})")
         return stats
         
     except Exception as e:
@@ -506,4 +518,36 @@ async def get_users(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"获取用户列表失败: {str(e)}"
+        )
+
+@router.post("/articles/generate-tags")
+async def generate_article_tags(
+    request: dict,
+    current_admin = Depends(get_current_admin)
+):
+    """使用Dify API生成文章标签"""
+    try:
+        article_content = request.get("content", "")
+        if not article_content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="文章内容不能为空"
+            )
+        
+        logger.info(f"🤖 管理员 {current_admin['username']} 请求生成文章标签")
+        
+        # 调用Dify服务生成标签
+        tags_data = await dify_service.generate_article_tags(article_content)
+        
+        return {
+            "success": True,
+            "data": tags_data,
+            "message": "标签生成成功"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ 生成文章标签失败: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"生成文章标签失败: {str(e)}"
         ) 

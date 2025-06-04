@@ -91,7 +91,7 @@
                 @click="resetToDefaults"
                 icon="RefreshLeft"
               >
-                重置基础
+                重置标签
               </el-button>
             </el-tooltip>
             <el-tooltip content="移除重复的标签，保持数据整洁" placement="top">
@@ -369,7 +369,7 @@ const userStore = useUserStore()
 const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
-const activeTab = ref('basic_info')
+const activeTab = ref('region')
 const hasChanges = ref(false)
 
 // 标签数据
@@ -505,7 +505,7 @@ const removeTag = async (tag: UserTag) => {
 
 const resetToDefaults = async () => {
   const result = await ElMessageBox.confirm(
-    '确定要重置标签吗？将保留您的注册地、省份、区域和能源产品标签，清理其他类型标签。',
+    '确定要重置标签吗？将恢复到您注册时的原始标签配置，包括注册城市和能源类型标签，清除所有手动添加的标签。',
     '重置确认',
     {
       confirmButtonText: '重置',
@@ -516,19 +516,63 @@ const resetToDefaults = async () => {
   
   if (!result) return
   
-  // 保留地域标签和能源类型标签，删除其他标签
-  const preservedCategories = ['region', 'energy_type']
-  const originalCount = tags.value.length
+  loading.value = true
   
-  tags.value = tags.value.filter(tag => preservedCategories.includes(tag.category))
-  
-  const removedCount = originalCount - tags.value.length
-  
-  if (removedCount > 0) {
-    hasChanges.value = true
-    ElMessage.success(`已重置标签，保留${tags.value.length}个基础标签，清理了${removedCount}个其他标签`)
-  } else {
-    ElMessage.info('当前只有基础标签，无需重置')
+  try {
+    const userId = userStore.userInfo?.id
+    if (!userId) {
+      throw new Error('请先登录')
+    }
+    
+    console.log('🔄 开始重置用户标签到注册配置...')
+    
+    // 🔥 调用新的重置API
+    const response = await tagService.resetUserTags(userId)
+    
+    if (response?.data?.tags) {
+      // 处理返回的重置标签数据
+      let resetTags = response.data.tags
+      
+      // 映射标签分类（处理后端可能返回的城市、省份等标签）
+      resetTags = resetTags.map(tag => {
+        if (['city', 'province'].includes(tag.category)) {
+          return { ...tag, category: 'region' }
+        }
+        return tag
+      })
+      
+      // 过滤掉基础信息标签
+      resetTags = resetTags.filter(tag => tag.category !== 'basic_info')
+      
+      // 去重处理
+      tags.value = deduplicateTags(resetTags)
+      originalTags.value = JSON.parse(JSON.stringify(tags.value))
+      hasChanges.value = false
+      
+      console.log('✅ 标签重置成功，新标签数量:', tags.value.length)
+      
+      // 统计重置后的标签分布
+      const tagStats = {}
+      tags.value.forEach(tag => {
+        if (!tagStats[tag.category]) {
+          tagStats[tag.category] = 0
+        }
+        tagStats[tag.category]++
+      })
+      
+      console.log('📊 重置后标签分布:', tagStats)
+      ElMessage.success(
+        `标签重置成功！恢复到注册时的配置，共${tags.value.length}个标签`
+      )
+    } else {
+      throw new Error('重置响应数据格式错误')
+    }
+    
+  } catch (e: any) {
+    console.error('❌ 重置标签失败:', e)
+    ElMessage.error(e.message || '重置标签失败，请重试')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -583,6 +627,9 @@ const fetchTags = async () => {
         }
         return tag
       })
+      
+      // 过滤掉基础信息标签
+      rawTags = rawTags.filter(tag => tag.category !== 'basic_info')
       
       // 去重处理
       tags.value = deduplicateTags(rawTags)
@@ -833,7 +880,9 @@ const cancelEditWeight = (tag: UserTag) => {
 const initTagCategories = async () => {
   try {
     console.log('🏷️ 初始化标签分类配置...')
-    tagCategories.value = await tagService.getTagCategories()
+    const categories = await tagService.getTagCategories()
+    // 过滤掉基础信息标签分类
+    tagCategories.value = categories.filter(cat => cat.key !== 'basic_info')
     console.log('✅ 标签分类配置加载成功:', tagCategories.value.length)
   } catch (error) {
     console.error('❌ 加载标签分类配置失败:', error)
@@ -1052,13 +1101,12 @@ const initTagCategories = async () => {
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
+  margin-bottom: 24px;
 }
 
 .tag-item-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  position: relative;
 }
 
 .tag-item {
@@ -1076,7 +1124,21 @@ const initTagCategories = async () => {
 
 .tag-item:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.editable-tag {
+  cursor: pointer;
+  position: relative;
+  padding-right: 32px;
+}
+
+.edit-hint-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  opacity: 0.6;
 }
 
 .tag-content {
@@ -1230,19 +1292,12 @@ const initTagCategories = async () => {
   margin: 0;
 }
 
-.editable-tag {
-  cursor: pointer;
-}
-
-.edit-hint-icon {
-  color: #1890ff;
-  margin-left: 4px;
-}
-
 .tag-weight-editor {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: inline-block;
+  background: white;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  padding: 8px;
 }
 
 .editor-content {
@@ -1252,16 +1307,17 @@ const initTagCategories = async () => {
 }
 
 .editing-tag-name {
-  font-weight: bold;
+  font-size: 12px;
+  color: #606266;
 }
 
 .weight-editor-input {
-  width: 120px;
+  width: 80px;
 }
 
 .weight-editor-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
 .width-placeholder {

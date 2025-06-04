@@ -169,8 +169,15 @@ def classify_region_type(region_name: str) -> dict:
         region_info.update({"type": "directional", "weight": 1.2, "level": 2})
     
     # 特殊处理：过于宽泛的地区权重降低
+    # 🔥 统一使用"全国"标签，不使用"中国"标签，避免重复
     if region_name in ["全国", "国内", "国际", "中国", "海外", "境外", "国外"]:
-        region_info.update({"type": "too_broad", "weight": 0.5, "level": 1})
+        if region_name in ["中国", "国内"]:
+            # 将"中国"和"国内"统一映射为"全国"
+            region_info.update({"name": "全国", "type": "national", "weight": 0.5, "level": 1})
+        elif region_name == "全国":
+            region_info.update({"type": "national", "weight": 0.5, "level": 1})
+        else:
+            region_info.update({"type": "international", "weight": 0.5, "level": 1})
     
     return region_info
 

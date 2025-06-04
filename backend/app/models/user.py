@@ -76,12 +76,14 @@ class User(BaseModel):
     created_at: str
     has_initial_tags: bool = False
     register_city: Optional[str] = None
+    register_info: Optional[dict] = None
 
 class UserCreate(BaseModel):
     email: EmailStr
     username: str = Field(..., min_length=2, max_length=50)
     password: str = Field(..., min_length=6)
     register_city: str = Field(..., description="用户注册城市")
+    energy_types: List[str] = Field(default_factory=list, description="注册时选择的能源类型")
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -97,6 +99,7 @@ class UserProfile(BaseModel):
     has_initial_tags: bool
     access_features: List[str] = []
     register_city: Optional[str] = None
+    register_info: Optional[dict] = None
 
 # API响应模型
 class UserTagsResponse(BaseModel):

@@ -100,7 +100,7 @@
               <el-timeline-item
                 v-for="(item, index) in filteredRecommendations"
                 :key="index"
-                :timestamp="formatDate(item.publish_time)"
+                :timestamp="formatDate(item.publish_date || item.publish_time)"
                 :type="getTimelineType(item.type)"
               >
                 <el-card class="recommendation-card">
@@ -170,7 +170,7 @@
             <el-scrollbar height="150px">
               <div v-for="(item, index) in tradeAnnouncements" :key="index" class="announcement-item">
                 <a :href="item.link" target="_blank" style="font-weight:bold;">{{ item.title }}</a>
-                <p class="text-gray-600">{{ formatDate(item.publish_time) }}</p>
+                <p class="text-gray-600">{{ formatDate(item.publish_date || item.publish_time) }}</p>
               </div>
               <el-empty v-if="!tradeAnnouncements.length" description="暂无交易公告" />
             </el-scrollbar>
@@ -188,7 +188,7 @@
             <el-scrollbar height="150px">
               <div v-for="(item, index) in priceAnnouncements" :key="index" class="announcement-item">
                 <a :href="item.link" target="_blank" style="font-weight:bold;">{{ item.title }}</a>
-                <p class="text-gray-600">{{ formatDate(item.publish_time) }}</p>
+                <p class="text-gray-600">{{ formatDate(item.publish_date || item.publish_time) }}</p>
               </div>
               <el-empty v-if="!priceAnnouncements.length" description="暂无调价公告" />
             </el-scrollbar>
@@ -442,29 +442,30 @@ const loadRecommendedContent = async () => {
     
     console.log('🏷️ 用户标签:', userTags)
     
-    // 调用个性化推荐API
-    const res = await api.get(`/users/${userId}/recommendations`, {
+    // 🔥 使用智能推荐API替代普通推荐
+    console.log('🧠 调用智能推荐API...')
+    const res = await api.get(`/users/${userId}/smart-recommendations`, {
       params: {
         page: 1,
-        page_size: 10
+        page_size: 50
       }
     })
     
-    console.log('📄 推荐内容响应:', res.data)
+    console.log('📄 智能推荐响应:', res.data)
     
     if (res.data && res.data.items) {
       recommendations.value = res.data.items || []
-      console.log('✅ 推荐内容加载成功，数量:', recommendations.value.length)
+      console.log('✅ 智能推荐内容加载成功，数量:', recommendations.value.length)
       
       // 应用当前筛选条件
       filterRecommendations()
     } else {
-      console.error('❌ 推荐内容加载失败:', res.data?.message || '未知错误')
+      console.error('❌ 智能推荐内容加载失败:', res.data?.message || '未知错误')
       recommendations.value = []
       filteredRecommendations.value = []
     }
   } catch (error) {
-    console.error('❌ 推荐内容加载异常:', error)
+    console.error('❌ 智能推荐内容加载异常:', error)
     recommendations.value = []
     filteredRecommendations.value = []
   }
@@ -479,10 +480,10 @@ const loadAnnouncements = async () => {
     // 按basic_info_tags筛选
     priceAnnouncements.value = allItems
       .filter(item => (item.basic_info_tags || []).includes('调价公告'))
-      .sort((a, b) => new Date(b.publish_time).getTime() - new Date(a.publish_time).getTime())
+      .sort((a, b) => new Date(b.publish_date || b.publish_time).getTime() - new Date(a.publish_date || a.publish_time).getTime())
     tradeAnnouncements.value = allItems
       .filter(item => (item.basic_info_tags || []).includes('交易公告'))
-      .sort((a, b) => new Date(b.publish_time).getTime() - new Date(a.publish_time).getTime())
+      .sort((a, b) => new Date(b.publish_date || b.publish_time).getTime() - new Date(a.publish_date || a.publish_time).getTime())
   } catch (error) {
     priceAnnouncements.value = []
     tradeAnnouncements.value = []
@@ -588,29 +589,58 @@ const setRecommendationFilter = (filter: string) => {
 
 // 筛选推荐内容
 const filterRecommendations = () => {
+  console.log('🔍 开始筛选推荐内容，筛选条件:', recommendationFilter.value)
+  console.log('📄 原始推荐数量:', recommendations.value.length)
+  
   if (recommendationFilter.value === 'all') {
+    // 🔥 全部推荐：直接使用智能推荐结果，保持权重排序
     filteredRecommendations.value = recommendations.value
-    return
+    console.log('✅ 全部推荐：保持智能推荐权重排序')
+  } else {
+    // 🔥 分类推荐：调用对应的按类型推荐API
+    loadRecommendationsByType(recommendationFilter.value)
+    return  // 提前返回，避免重复处理
   }
   
-  filteredRecommendations.value = recommendations.value.filter(item => {
-    const basicInfoTags = item.basic_info_tags || []
-    
-    switch (recommendationFilter.value) {
-      case 'market':
-        // 行情：精确匹配"行业资讯"标签
-        return basicInfoTags.includes('行业资讯')
-      case 'policy':
-        // 政策：精确匹配"政策法规"标签
-        return basicInfoTags.includes('政策法规')
-      case 'announcement':
-        // 公告：匹配"交易公告"或"调价公告"标签
-        return basicInfoTags.includes('交易公告') || 
-               basicInfoTags.includes('调价公告')
-      default:
-        return true
+  console.log('✅ 筛选后数量:', filteredRecommendations.value.length)
+}
+
+// 🔥 新增：按类型加载推荐内容
+const loadRecommendationsByType = async (contentType: string) => {
+  try {
+    const userId = userStore.userInfo?.id
+    if (!userId) {
+      console.log('用户未登录，无法加载分类推荐')
+      filteredRecommendations.value = []
+      return
     }
-  })
+    
+    console.log(`🎯 加载${contentType}类推荐内容...`)
+    
+    // 调用新的按类型推荐API
+    const res = await api.get(`/users/${userId}/recommendations-by-type/${contentType}`, {
+      params: {
+        page: 1,
+        page_size: 20
+      }
+    })
+    
+    if (res.data && res.data.items) {
+      filteredRecommendations.value = res.data.items || []
+      console.log(`✅ ${contentType}类推荐加载成功，数量:`, filteredRecommendations.value.length)
+      
+      // 🎯 关键：不进行时间排序！保持后端的权重排序
+      console.log(`🎯 保持${contentType}推荐的权重优先排序，不进行时间排序`)
+      
+    } else {
+      console.error(`❌ ${contentType}类推荐加载失败:`, res.data?.message || '未知错误')
+      filteredRecommendations.value = []
+    }
+    
+  } catch (error) {
+    console.error(`❌ ${contentType}类推荐加载异常:`, error)
+    filteredRecommendations.value = []
+  }
 }
 
 // 获取空状态描述

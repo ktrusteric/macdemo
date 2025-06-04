@@ -47,6 +47,11 @@ class ContentService:
                 # 发布时间 - 优先英文，后备中文，最后默认当前时间
                 "publish_time": self._parse_publish_time(document),
                 
+                # 发布日期 - 字符串格式YYYY-MM-DD，用于前端排序
+                "publish_date": document.get("publish_date") or (
+                    self._parse_publish_time(document).strftime("%Y-%m-%d") if self._parse_publish_time(document) else None
+                ),
+                
                 # 处理文档类型映射 - 优先英文，后备中文
                 "type": document.get("type") or self._map_document_type(document.get("文档类型", "行业资讯")),
                 
@@ -73,10 +78,27 @@ class ContentService:
             raise Exception(error_msg)
     
     def _parse_publish_time(self, document: dict) -> datetime:
-        """解析发布时间字段"""
-        # 尝试多个时间字段
+        """解析发布时间字段 - 优先使用publish_time，后备publish_date"""
+        # 🔥 优先使用publish_time字段（datetime对象）
+        if document.get("publish_time"):
+            parsed_time = self._parse_datetime(document["publish_time"])
+            if parsed_time:
+                return parsed_time
+        
+        # 🔥 后备：使用publish_date字段（字符串格式YYYY-MM-DD）
+        if document.get("publish_date"):
+            try:
+                publish_date_str = document["publish_date"]
+                if isinstance(publish_date_str, str) and len(publish_date_str) == 10:
+                    # YYYY-MM-DD格式，补全时分秒为00:00:00
+                    return datetime.strptime(publish_date_str + " 00:00:00", "%Y-%m-%d %H:%M:%S")
+                else:
+                    return self._parse_datetime(publish_date_str)
+            except Exception as e:
+                logger.warning(f"Failed to parse publish_date: {document.get('publish_date')} - {str(e)}")
+        
+        # 尝试其他中文时间字段
         time_candidates = [
-            document.get("publish_time"),
             document.get("发布时间"),
             document.get("发布日期"),
             document.get("created_at"),
@@ -162,39 +184,38 @@ class ContentService:
     ) -> List[Content]:
         """获取内容列表"""
         try:
-            # 构建查询条件
             query = {}
             
-            # 内容类型筛选（使用basic_info_tags字段）
             if content_type:
-                # 将英文类型映射到中文标签进行查询
-                reverse_type_mapping = {
-                    "policy": "政策法规",
-                    "news": "行业资讯",
-                    "price": "调价公告", 
-                    "announcement": "交易公告"
-                }
-                chinese_type = reverse_type_mapping.get(content_type, content_type)
-                query["basic_info_tags"] = chinese_type
+                query["type"] = content_type
             
-            # 标签筛选
             if tags:
-                tag_conditions = []
-                tag_fields = [
-                    'basic_info_tags', 'region_tags', 'energy_type_tags',
-                    'business_field_tags', 'beneficiary_tags', 
-                    'policy_measure_tags', 'importance_tags'
-                ]
-                
-                for field in tag_fields:
-                    tag_conditions.append({field: {"$in": tags}})
-                
-                if tag_conditions:
-                    query["$or"] = tag_conditions
+                tag_queries = []
+                for tag in tags:
+                    tag_queries.extend([
+                        {"basic_info_tags": tag},
+                        {"region_tags": tag},
+                        {"energy_type_tags": tag},
+                        {"business_field_tags": tag},
+                        {"beneficiary_tags": tag},
+                        {"policy_measure_tags": tag},
+                        {"importance_tags": tag}
+                    ])
+                query["$or"] = tag_queries
             
-            # 排序设置
-            sort_field = "导入时间" if sort_by == "latest" else "发布时间"
-            sort_order = -1  # 降序
+            # 🔥 修改排序字段：使用publish_date替代publish_time
+            if sort_by == "latest":
+                sort_field = "publish_date"
+                sort_order = -1  # 从新到旧
+            elif sort_by == "oldest":
+                sort_field = "publish_date"
+                sort_order = 1   # 从旧到新
+            elif sort_by == "popularity":
+                sort_field = "view_count"
+                sort_order = -1
+            else:
+                sort_field = "publish_date"
+                sort_order = -1
             
             contents = []
             cursor = self.collection.find(query).sort([(sort_field, sort_order)]).skip(skip).limit(limit)
@@ -353,7 +374,8 @@ class ContentService:
                 query = {"$and": [query, {"$or": tag_queries}]}
             
             contents = []
-            cursor = self.collection.find(query).sort([("发布时间", -1)]).skip(skip).limit(limit)
+            # 🔥 修改排序字段：使用publish_date替代发布时间
+            cursor = self.collection.find(query).sort([("publish_date", -1)]).skip(skip).limit(limit)
             
             async for document in cursor:
                 try:
@@ -406,7 +428,8 @@ class ContentService:
                         }
                     }
                 },
-                {"$sort": {"match_score": -1, "发布时间": -1}},
+                # 🔥 修改排序字段：先按匹配分数，再按publish_date排序
+                {"$sort": {"match_score": -1, "publish_date": -1}},
                 {"$skip": skip},
                 {"$limit": limit}
             ]

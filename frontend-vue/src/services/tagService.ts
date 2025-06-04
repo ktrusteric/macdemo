@@ -201,6 +201,49 @@ class TagService {
   }
 
   /**
+   * 🔥 获取能源产品层级结构（支持分层权重）
+   */
+  async getEnergyHierarchy(): Promise<any> {
+    try {
+      const response = await api.get('/users/energy-hierarchy')
+      return response.data
+    } catch (error) {
+      console.error('❌ 获取能源产品层级失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 🔥 获取能源产品权重配置
+   */
+  async getEnergyWeights(energyTypes: string[]): Promise<any> {
+    try {
+      const response = await api.post('/users/energy-weights', {
+        energy_types: energyTypes
+      })
+      return response.data
+    } catch (error) {
+      console.error('❌ 获取能源权重配置失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 🔥 验证和优化用户能源选择
+   */
+  async validateEnergySelection(energyTypes: string[]): Promise<any> {
+    try {
+      const response = await api.post('/users/validate-energy-selection', {
+        energy_types: energyTypes
+      })
+      return response.data
+    } catch (error) {
+      console.error('❌ 验证能源选择失败:', error)
+      throw error
+    }
+  }
+
+  /**
    * 获取城市详情数据
    */
   async getCitiesDetails(): Promise<any> {
@@ -230,7 +273,31 @@ class TagService {
   }
 
   /**
-   * 清除缓存（用于强制刷新）
+   * 🔥 重置用户标签到注册时的原始配置
+   * 
+   * @param userId 用户ID
+   * @returns Promise<any> 重置后的用户标签
+   */
+  async resetUserTags(userId: string): Promise<any> {
+    try {
+      console.log(`🔄 开始重置用户 ${userId} 的标签...`)
+      const response = await api.post(`/users/${userId}/tags/reset`)
+      
+      console.log('✅ 用户标签重置成功:', {
+        userId,
+        newTagCount: response.data?.data?.tags?.length || 0,
+        message: response.data?.message || '重置成功'
+      })
+      
+      return response.data
+    } catch (error) {
+      console.error('❌ 重置用户标签失败:', error)
+      throw new Error('重置标签失败，请检查网络连接或联系管理员')
+    }
+  }
+
+  /**
+   * 清理缓存
    */
   clearCache(): void {
     this.cachedTagOptions = null

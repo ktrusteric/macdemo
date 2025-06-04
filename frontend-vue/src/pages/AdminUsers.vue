@@ -29,7 +29,7 @@
       <div class="user-list">
         <el-row :gutter="20">
           <el-col 
-            :span="6" 
+            :span="8" 
             v-for="user in users" 
             :key="user.id"
             class="user-card-col"
@@ -784,17 +784,21 @@ onMounted(async () => {
 }
 
 .user-list {
-  padding: 20px;
+  padding: 24px;
 }
 
 .user-card-col {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .user-card {
   cursor: pointer;
   transition: all 0.3s;
   border-radius: 8px;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .user-card:hover {
@@ -809,24 +813,35 @@ onMounted(async () => {
 
 .user-info {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
 }
 
 .user-details h4 {
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
   color: #303133;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .user-details p {
-  margin: 2px 0;
-  font-size: 12px;
+  margin: 3px 0;
+  font-size: 13px;
   color: #909399;
+  word-break: break-all;
 }
 
 .user-stats {
   text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .tags-management-card {

@@ -566,6 +566,7 @@ class RegionMapper:
     }
     
     # 区域代码到中文名称的映射
+    # 🔥 注意：统一使用"全国"标签，不再使用"中国"标签，避免重复
     REGION_NAMES: Dict[str, str] = {
         RegionCode.EAST_CHINA: "华东地区",
         RegionCode.SOUTH_CHINA: "华南地区",
@@ -574,7 +575,7 @@ class RegionMapper:
         RegionCode.NORTHWEST_CHINA: "西北地区",
         RegionCode.NORTHEAST_CHINA: "东北地区",
         RegionCode.CENTRAL_CHINA: "华中地区",
-        RegionCode.NATIONAL: "全国",
+        RegionCode.NATIONAL: "全国",  # 🔥 统一使用"全国"，不使用"中国"
         RegionCode.INTERNATIONAL: "国际"
     }
     
