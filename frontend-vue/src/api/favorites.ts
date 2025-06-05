@@ -25,8 +25,13 @@ export interface FavoriteItem {
   publish_date: string
   source: string
   type: string
-  energy_type_tags: string[]
+  basic_info_tags: string[]
   region_tags: string[]
+  energy_type_tags: string[]
+  business_field_tags: string[]
+  beneficiary_tags: string[]
+  policy_measure_tags: string[]
+  importance_tags: string[]
   link?: string
 }
 

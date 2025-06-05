@@ -4,7 +4,7 @@
     <div class="header-section">
       <h1 class="page-title">
         <el-icon class="title-icon"><Document /></el-icon>
-        内容资讯中心
+        行业资讯中心
       </h1>
       <p class="page-subtitle">全面的能源政策、行情动态和公告信息</p>
     </div>
@@ -21,7 +21,7 @@
             style="width: 100%"
           >
             <el-option label="全部内容" value="all" />
-            <el-option label="📈 行情动态" value="market" />
+            <el-option label="📈 资讯动态" value="market" />
             <el-option label="📋 政策法规" value="policy" />
             <el-option label="📢 公告信息" value="announcement" />
           </el-select>
@@ -71,7 +71,7 @@
     <el-row :gutter="20" class="stats-row">
       <el-col :span="6">
         <el-card class="stat-card" @click="selectCategory('market')">
-          <el-statistic title="行情咨询" :value="stats.market" />
+          <el-statistic title="行情资讯" :value="stats.market" />
           <div class="stat-icon">📈</div>
         </el-card>
       </el-col>

@@ -9,17 +9,37 @@
     <template v-else>
       <el-header class="header-bar">
         <div class="header-left">
-          <span class="logo">⛽ 上海石油天然气交易中心信息门户系统</span>
+          <img src="@/logo.png" alt="上海石油天然气交易中心" class="header-logo" />
+          <span class="logo">上海石油天然气交易中心信息门户系统</span>
         </div>
         <div class="header-right">
           <template v-if="isLoggedIn && userInfo">
-            <el-tag type="info" class="mr-2">{{ userInfo.username || userInfo.email }}</el-tag>
-            <el-button type="default" icon="el-icon-bell" class="mr-2" @click="goNotifications">消息通知</el-button>
-            <el-button type="primary" icon="el-icon-setting" @click="goSettings" class="mr-2">设置</el-button>
-            <el-button type="danger" @click="logout">退出</el-button>
+            <div class="user-info">
+              <span class="user-greeting">
+                <el-icon class="user-icon"><i class="el-icon-user"></i></el-icon>
+                {{ userInfo.username || userInfo.email }}{{ getGreeting() }}
+              </span>
+            </div>
+            <div class="action-buttons">
+              <el-button type="info" @click="goNotifications">
+                <el-icon><i class="el-icon-bell"></i></el-icon>
+                <span>消息</span>
+              </el-button>
+              <el-button type="primary" @click="goSettings">
+                <el-icon><i class="el-icon-setting"></i></el-icon>
+                <span>设置</span>
+              </el-button>
+              <el-button type="danger" @click="logout">
+                <el-icon><i class="el-icon-switch-button"></i></el-icon>
+                <span>退出</span>
+              </el-button>
+            </div>
           </template>
           <template v-else>
-            <el-button type="primary" @click="() => router.push('/login')">登录</el-button>
+            <el-button type="primary" class="login-btn" @click="() => router.push('/login')">
+              <el-icon><i class="el-icon-user"></i></el-icon>
+              <span>登录</span>
+            </el-button>
           </template>
         </div>
       </el-header>
@@ -28,27 +48,24 @@
           <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" @select="handleMenuSelect" router>
             <el-menu-item index="/dashboard">
               <el-icon><i class="el-icon-menu"></i></el-icon>
-              <span>仪表盘</span>
-            </el-menu-item>
-            <el-menu-item index="/tags">
-              <el-icon><i class="el-icon-collection"></i></el-icon>
-              <span>标签管理</span>
+              <span> 📊 仪表盘</span>
             </el-menu-item>
             <el-menu-item index="/content">
               <el-icon><i class="el-icon-document"></i></el-icon>
-              <span>内容资讯</span>
+              <span> 📝 行业资讯</span>
             </el-menu-item>
-            <el-menu-item index="/favorites">
+            <!-- 我的收藏功能已集成到设置页面，暂时隐藏独立菜单项 -->
+            <!-- <el-menu-item index="/favorites">
               <el-icon><i class="fas fa-heart"></i></el-icon>
-              <span>我的收藏</span>
-            </el-menu-item>
+              <span> 📖 我的收藏</span>
+            </el-menu-item> -->
             <el-menu-item index="/market">
               <el-icon><i class="el-icon-data-analysis"></i></el-icon>
-              <span>行情信息</span>
+              <span> 📈 行情信息</span>
             </el-menu-item>
             <el-menu-item index="/ai">
               <el-icon><i class="el-icon-robot"></i></el-icon>
-              <span>AI助手</span>
+              <span> 🤖 A I 助手</span>
             </el-menu-item>
           </el-menu>
         </el-aside>
@@ -117,6 +134,21 @@ const goNotifications = () => {
 const handleMenuSelect = (index: string) => {
   router.push(index)
 }
+
+const getGreeting = () => {
+  const now = new Date()
+  const hours = now.getHours()
+  
+  if (hours >= 5 && hours < 12) {
+    return '，上午好！'
+  } else if (hours >= 12 && hours < 14) {
+    return '，中午好！'
+  } else if (hours >= 14 && hours < 18) {
+    return '，下午好！'
+  } else {
+    return '，晚上好！'
+  }
+}
 </script>
 
 <style scoped>
@@ -170,21 +202,6 @@ const handleMenuSelect = (index: string) => {
   color: #1769aa !important;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-
 .header-bar {
   display: flex;
   justify-content: space-between;
@@ -196,18 +213,189 @@ const handleMenuSelect = (index: string) => {
   box-shadow: 0 2px 8px #e4e7ed33;
 }
 
-.header-left .logo {
-  font-weight: bold;
-  font-size: 22px;
-  color: #1769aa;
-  letter-spacing: 2px;
+.header-left {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.header-logo {
+  width: 40px;
+  height: auto;
+  max-height: 36px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.logo {
+  font-weight: bold;
+  font-size: 18px;
+  color: #303133;
 }
 
 .header-right {
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-greeting {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-icon {
+  font-size: 16px;
+  color: #409eff;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-buttons :deep(.el-button) {
+  height: 32px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+  min-width: auto !important;
+  width: auto !important;
+}
+
+.action-buttons :deep(.el-button .el-icon) {
+  font-size: 14px !important;
+  margin-right: 4px !important;
+}
+
+.action-buttons :deep(.el-button span) {
+  line-height: 1 !important;
+}
+
+.action-buttons :deep(.el-button:hover) {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 消息通知按钮 */
+.action-buttons :deep(.el-button--info) {
+  background: #17a2b8 !important;
+  color: #ffffff !important;
+}
+
+.action-buttons :deep(.el-button--info:hover) {
+  background: #138496 !important;
+}
+
+/* 个人设置按钮 */
+.action-buttons :deep(.el-button--primary) {
+  background: #409eff !important;
+  color: #ffffff !important;
+}
+
+.action-buttons :deep(.el-button--primary:hover) {
+  background: #337ecc !important;
+}
+
+/* 退出登录按钮 */
+.action-buttons :deep(.el-button--danger) {
+  background: #f56c6c !important;
+  color: #ffffff !important;
+}
+
+.action-buttons :deep(.el-button--danger:hover) {
+  background: #e53e3e !important;
+}
+
+/* 登录按钮样式 */
+.login-btn {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  background: #409eff;
+  color: #ffffff;
+  border: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.login-btn:hover {
+  background: #337ecc;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .header-right {
+    gap: 12px;
+  }
+  
+  .action-buttons {
+    gap: 6px;
+  }
+  
+  .action-buttons :deep(.el-button) {
+    padding: 0 6px !important;
+    font-size: 12px !important;
+  }
+  
+  .user-greeting {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-right {
+    gap: 8px;
+  }
+  
+  .action-buttons :deep(.el-button) {
+    height: 28px !important;
+    padding: 0 6px !important;
+    font-size: 11px !important;
+  }
+  
+  .action-buttons :deep(.el-button span) {
+    display: none !important;
+  }
+  
+  .user-greeting {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-buttons :deep(.el-button) {
+    height: 26px !important;
+    padding: 0 4px !important;
+    border-radius: 4px !important;
+  }
+  
+  .user-greeting {
+    font-size: 11px;
+  }
+  
+  .user-icon {
+    font-size: 14px;
+  }
 }
 
 .mr-2 { 
